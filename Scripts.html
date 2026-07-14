@@ -9,12 +9,17 @@ const App = {
 
 function getOrCreateSessionId() {
   const storageKey = 'sampulIgStudioSessionId';
-  let value = window.localStorage.getItem(storageKey);
+  let value = '';
+  try {
+    value = window.localStorage.getItem(storageKey) || '';
+  } catch (error) {}
   if (!/^[A-Za-z0-9_-]{20,100}$/.test(value || '')) {
     value = window.crypto && window.crypto.randomUUID
       ? window.crypto.randomUUID().replace(/-/g, '')
       : `${Date.now()}_${Math.random().toString(36).slice(2)}_${Math.random().toString(36).slice(2)}`;
-    window.localStorage.setItem(storageKey, value);
+    try {
+      window.localStorage.setItem(storageKey, value);
+    } catch (error) {}
   }
   return value;
 }

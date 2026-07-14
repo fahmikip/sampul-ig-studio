@@ -71,7 +71,7 @@ function buildFallbackHtml_(error) {
   var message = sanitizeInput(error && error.message ? error.message : String(error));
   return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">' +
     '<title>Sampul IG Studio</title><style>body{margin:0;background:#0f0f0f;color:#f8f8f8;font-family:Arial,sans-serif;display:grid;place-items:center;min-height:100vh;padding:24px;box-sizing:border-box}.box{max-width:720px;background:#1b1b1b;border:1px solid #2b2b2b;border-radius:12px;padding:24px}p{color:#a3a3a3;line-height:1.6}code{color:#f59e0b}</style></head>' +
-    '<body><div class="box"><h1>Sampul IG Studio belum siap</h1><p>Jalankan fungsi <code>setupApplication()</code> dari editor Google Apps Script, lalu buka ulang Web App.</p><p>' +
+    '<body><div class="box"><h1>Sampul IG Studio belum siap</h1><p>Jalankan fungsi <code>setupApplication_()</code> dari editor Google Apps Script, lalu buka ulang Web App.</p><p>' +
     message + '</p></div></body></html>';
 }
 

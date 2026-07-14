@@ -52,6 +52,7 @@ sampul-ig-studio/
 |-- TemplateService.gs
 |-- HistoryService.gs
 |-- SettingsService.gs
+|-- SecurityService.gs
 |-- ValidationService.gs
 |-- Utils.gs
 |-- Index.html
@@ -73,6 +74,7 @@ sampul-ig-studio/
 - `TemplateService.gs`: CRUD template.
 - `HistoryService.gs`: simpan, ambil, duplikasi, dan hapus riwayat desain.
 - `SettingsService.gs`: pengaturan aplikasi.
+- `SecurityService.gs`: token admin dan validasi sesi perangkat publik.
 - `ValidationService.gs`: validasi input, file, MIME type, dan base64.
 - `Utils.gs`: konfigurasi aplikasi dan helper umum.
 - `Index.html`: layout utama aplikasi.
@@ -91,9 +93,12 @@ sampul-ig-studio/
 3. Buat file dengan nama yang sama seperti struktur di atas.
 4. Salin isi setiap file dari repository ini ke file Apps Script yang sesuai.
 5. Simpan project.
-6. Jalankan fungsi `setupApplication()` dari editor Apps Script.
+6. Jalankan fungsi `setupApplication_()` dari editor Apps Script.
 7. Berikan izin akses Google Drive dan Google Spreadsheet saat diminta.
 8. Setelah setup berhasil, folder Drive dan Spreadsheet database akan dibuat otomatis.
+9. Jalankan `rotateAdminAccessToken_()` dan simpan nilai `data.token` dari hasil eksekusi di tempat aman.
+
+Fungsi dengan akhiran `_` sengaja dibuat privat agar tidak dapat dipanggil pengunjung melalui `google.script.run`.
 
 ## Deployment Web App
 
@@ -101,9 +106,18 @@ sampul-ig-studio/
 2. Pilih **New deployment**.
 3. Pilih tipe **Web app**.
 4. Set **Execute as** ke `Me`.
-5. Set **Who has access** sesuai kebutuhan.
+5. Untuk penggunaan publik, set **Who has access** ke `Anyone`.
 6. Klik **Deploy**.
 7. Buka URL Web App yang diberikan.
+
+## Mode Publik dan Admin
+
+- Pengunjung dapat membuat desain, download, menyimpan hasil, dan melihat riwayat milik sesi perangkatnya.
+- ID sesi dibuat acak dan disimpan di `localStorage`. Menghapus data browser akan membuat sesi baru sehingga riwayat lama tidak lagi terlihat dari perangkat tersebut.
+- Tombol Admin meminta token yang dibuat oleh `rotateAdminAccessToken_()`.
+- Jangan menaruh token admin di HTML, source code, Spreadsheet, atau dokumentasi publik.
+- Jalankan kembali `rotateAdminAccessToken_()` bila token diduga bocor. Token lama langsung tidak berlaku.
+- Deployment `Execute as: Me` menggunakan kuota Apps Script, Spreadsheet, dan Drive pemilik aplikasi untuk seluruh pengguna.
 
 ## Pengaturan Awal
 
@@ -133,7 +147,7 @@ Setup otomatis membuat sheet:
 - `DesignHistory`
 - `Settings`
 
-Template default akan dimasukkan ke sheet `Templates` saat `setupApplication()` dijalankan pertama kali.
+Template default akan dimasukkan ke sheet `Templates` saat `setupApplication_()` dijalankan pertama kali.
 
 ## Struktur Folder Drive
 
@@ -204,7 +218,7 @@ Setelah mengubah template langsung di Spreadsheet, jalankan `clearApplicationCac
 
 **Aplikasi menampilkan halaman belum siap**
 
-Jalankan `setupApplication()` dari editor Apps Script, lalu refresh Web App.
+Jalankan `setupApplication_()` dari editor Apps Script, lalu refresh Web App.
 
 **Template tidak muncul**
 
@@ -220,7 +234,11 @@ Refresh halaman dan tunggu Google Fonts selesai dimuat sebelum download.
 
 **Riwayat tidak tersimpan**
 
-Pastikan sheet `DesignHistory` ada dan fungsi `setupApplication()` sudah berhasil.
+Pastikan sheet `DesignHistory` ada dan fungsi `setupApplication_()` sudah berhasil. Kolom `SessionID` ditambahkan otomatis saat aplikasi dibuka.
+
+**Token admin tidak valid atau belum dikonfigurasi**
+
+Jalankan `rotateAdminAccessToken_()` dari editor Apps Script, lalu gunakan token terbaru saat membuka Template Manager.
 
 ## Checklist Pengujian
 
