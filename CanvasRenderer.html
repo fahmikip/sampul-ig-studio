@@ -189,36 +189,24 @@ const CanvasRenderer = (() => {
         ctx.fillRect(88 + i * 48, canvas.height - 240 + (i % 2) * 28, 24, 24);
       }
     }
-    if (style === 'garuda-emblem') {
-      const redGlow = ctx.createRadialGradient(canvas.width * 0.5, canvas.height * 0.22, 40, canvas.width * 0.5, canvas.height * 0.22, canvas.width * 0.55);
-      redGlow.addColorStop(0, hexToRgba('#FFFFFF', 0.24));
-      redGlow.addColorStop(1, hexToRgba('#FFFFFF', 0));
-      ctx.fillStyle = redGlow;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      drawGarudaEmblem(ctx, canvas.width / 2, canvas.height * 0.24, canvas.width * 0.34, '#FFFFFF', '#B91C1C', 0.95);
-      ctx.globalAlpha = 0.18;
-      ctx.fillStyle = '#FFFFFF';
-      for (let i = 0; i < 9; i++) {
-        ctx.fillRect(70 + i * 120, canvas.height * 0.42, 54, canvas.height * 0.5);
+    if (style === 'elegant-grid') {
+      ctx.strokeStyle = '#172033';
+      ctx.globalAlpha = 0.1;
+      ctx.lineWidth = 2;
+      const gridSize = Math.max(72, Math.round(canvas.width / 12));
+      for (let x = 44; x < canvas.width - 44; x += gridSize) {
+        ctx.beginPath(); ctx.moveTo(x, 44); ctx.lineTo(x, canvas.height - 44); ctx.stroke();
+      }
+      for (let y = 44; y < canvas.height - 44; y += gridSize) {
+        ctx.beginPath(); ctx.moveTo(44, y); ctx.lineTo(canvas.width - 44, y); ctx.stroke();
       }
       ctx.globalAlpha = 1;
       ctx.fillStyle = state.colors.accent;
-    }
-    if (style === 'garuda-white-hero') {
-      ctx.globalAlpha = 1;
-      ctx.fillStyle = '#B91C1C';
-      ctx.fillRect(0, 0, canvas.width, Math.round(canvas.height * 0.34));
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(0, Math.round(canvas.height * 0.34), canvas.width, canvas.height);
-      drawGarudaEmblem(ctx, canvas.width / 2, canvas.height * 0.23, canvas.width * 0.3, '#FFFFFF', '#B91C1C', 0.98);
-      ctx.globalAlpha = 0.12;
-      ctx.strokeStyle = '#B91C1C';
-      ctx.lineWidth = 3;
-      for (let i = 0; i < 7; i++) {
-        ctx.beginPath();
-        ctx.arc(canvas.width / 2, canvas.height * 0.33, 150 + i * 48, Math.PI * 0.04, Math.PI * 0.96);
-        ctx.stroke();
-      }
+      ctx.fillRect(44, 44, canvas.width - 88, 8);
+      ctx.fillRect(canvas.width - 160, 52, 116, 116);
+      ctx.globalAlpha = 0.08;
+      ctx.fillStyle = '#172033';
+      ctx.fillRect(44, canvas.height * 0.58, canvas.width - 88, canvas.height * 0.26);
       ctx.globalAlpha = 1;
       ctx.fillStyle = state.colors.accent;
     }
@@ -336,57 +324,6 @@ const CanvasRenderer = (() => {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('IG', x + 26, y + 27);
-  }
-
-  function drawGarudaEmblem(ctx, cx, cy, size, wingColor, shieldColor, alpha) {
-    const s = size / 360;
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = wingColor;
-    ctx.strokeStyle = wingColor;
-    ctx.lineWidth = 5 * s;
-    drawWing(ctx, -1, s);
-    drawWing(ctx, 1, s);
-    ctx.beginPath();
-    ctx.moveTo(0, -94 * s);
-    ctx.bezierCurveTo(34 * s, -84 * s, 42 * s, -44 * s, 18 * s, -22 * s);
-    ctx.bezierCurveTo(42 * s, -10 * s, 50 * s, 22 * s, 20 * s, 46 * s);
-    ctx.bezierCurveTo(8 * s, 56 * s, -8 * s, 56 * s, -20 * s, 46 * s);
-    ctx.bezierCurveTo(-50 * s, 22 * s, -42 * s, -10 * s, -18 * s, -22 * s);
-    ctx.bezierCurveTo(-42 * s, -44 * s, -34 * s, -84 * s, 0, -94 * s);
-    ctx.fill();
-    ctx.fillStyle = shieldColor;
-    roundRect(ctx, -42 * s, -4 * s, 84 * s, 92 * s, 12 * s);
-    ctx.fill();
-    ctx.strokeStyle = wingColor;
-    ctx.lineWidth = 8 * s;
-    ctx.stroke();
-    ctx.fillStyle = wingColor;
-    ctx.beginPath();
-    ctx.moveTo(-58 * s, 96 * s);
-    ctx.quadraticCurveTo(0, 132 * s, 58 * s, 96 * s);
-    ctx.lineTo(42 * s, 124 * s);
-    ctx.quadraticCurveTo(0, 150 * s, -42 * s, 124 * s);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-  }
-
-  function drawWing(ctx, direction, s) {
-    ctx.save();
-    ctx.scale(direction, 1);
-    for (let i = 0; i < 9; i++) {
-      const y = -66 * s + i * 24 * s;
-      const span = 128 * s - i * 8 * s;
-      ctx.beginPath();
-      ctx.moveTo(10 * s, -38 * s + i * 8 * s);
-      ctx.bezierCurveTo(span * 0.5, y - 58 * s, span, y - 16 * s, span + 20 * s, y + 18 * s);
-      ctx.bezierCurveTo(span * 0.72, y + 26 * s, span * 0.36, y + 18 * s, 14 * s, y + 26 * s);
-      ctx.closePath();
-      ctx.fill();
-    }
-    ctx.restore();
   }
 
   function drawFrame(ctx, canvas, state) {

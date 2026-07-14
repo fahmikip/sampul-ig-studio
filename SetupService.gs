@@ -60,6 +60,7 @@ function initializeDefaultSettings_() {
 
 function initializeDefaultTemplates_() {
   initializeSpreadsheet_();
+  removeDeprecatedDefaultTemplates_();
   var existing = readSheetObjects_(APP_CONFIG.SHEETS.TEMPLATES);
   var templates = getDefaultTemplates_();
   if (existing.length > 0) {
@@ -90,6 +91,20 @@ function getHistoryHeaders_() {
   return ['DesignID', 'Timestamp', 'SessionID', 'Title', 'Description', 'Category', 'TemplateID', 'TemplateName', 'Format', 'FileName', 'FileID', 'FileURL', 'ThumbnailURL', 'Status'];
 }
 
+function removeDeprecatedDefaultTemplates_() {
+  var deprecatedIds = ['tpl-garuda-merdeka-1994', 'tpl-garuda-putih-hero'];
+  var sheet = getSheetByName_(APP_CONFIG.SHEETS.TEMPLATES);
+  var values = sheet.getDataRange().getValues();
+  if (values.length < 2) return;
+  var idColumn = values[0].indexOf('TemplateID');
+  if (idColumn === -1) return;
+  for (var row = values.length - 1; row >= 1; row--) {
+    if (deprecatedIds.indexOf(String(values[row][idColumn])) !== -1) {
+      sheet.deleteRow(row + 1);
+    }
+  }
+}
+
 function getSettingsHeaders_() {
   return ['Key', 'Value', 'Description'];
 }
@@ -118,11 +133,10 @@ function getDefaultTemplates_() {
     ['tpl-studio-glass', 'Studio Glass', 'Professional Modern', '#0E1726', '#38BDF8', 'glass-panel', 90, '#F8FAFC', '#BAE6FD', 0.18, 'Inter'],
     ['tpl-focus-rings', 'Focus Rings', 'Professional Modern', '#101828', '#F97316', 'focus-rings', 88, '#FFFFFF', '#FED7AA', 0.2, 'Poppins'],
     ['tpl-signal-lines', 'Signal Lines', 'Professional Modern', '#08111F', '#22C55E', 'signal-lines', 84, '#ECFDF5', '#BBF7D0', 0.16, 'Inter'],
+    ['tpl-ivory-grid', 'Ivory Grid', 'Elegant Grid', '#F4F0E8', '#B08D57', 'elegant-grid', 86, null, '#172033', '#667085', 0.06, 'Poppins'],
     ['tpl-merdeka-proklamasi', 'Merdeka Proklamasi', 'Kemerdekaan 17 Agustus', '#B91C1C', '#FFFFFF', 'merdeka-ribbon', 92, '#FFFFFF', '#FEE2E2', 0.18, 'Oswald'],
     ['tpl-merah-putih-modern', 'Merah Putih Modern', 'Kemerdekaan 17 Agustus', '#FAFAFA', '#DC2626', 'red-white-modern', 88, '#111827', '#4B5563', 0.08, 'Poppins'],
-    ['tpl-nusantara-bold', 'Nusantara Bold', 'Kemerdekaan 17 Agustus', '#7F1D1D', '#FACC15', 'nusantara-bold', 96, '#FFF7ED', '#FED7AA', 0.2, 'Oswald'],
-    ['tpl-garuda-merdeka-1994', 'Garuda Merdeka 1994', 'Kemerdekaan 17 Agustus', '#A11218', '#F8FAFC', 'garuda-emblem', 90, '#FFFFFF', '#FEE2E2', 0.14, 'Oswald'],
-    ['tpl-garuda-putih-hero', 'Garuda Putih Hero', 'Kemerdekaan 17 Agustus', '#F8F8F8', '#B91C1C', 'garuda-white-hero', 86, '#991B1B', '#4B5563', 0.06, 'Poppins']
+    ['tpl-nusantara-bold', 'Nusantara Bold', 'Kemerdekaan 17 Agustus', '#7F1D1D', '#FACC15', 'nusantara-bold', 96, '#FFF7ED', '#FED7AA', 0.2, 'Oswald']
   ];
 
   return specs.map(function(spec, index) {
