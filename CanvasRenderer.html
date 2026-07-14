@@ -229,6 +229,25 @@ const CanvasRenderer = (() => {
         ctx.fillRect(88 + i * 48, canvas.height - 240 + (i % 2) * 28, 24, 24);
       }
     }
+    if (style === 'calligraphy-flourish') {
+      const glow = ctx.createRadialGradient(canvas.width * 0.78, canvas.height * 0.18, 10, canvas.width * 0.78, canvas.height * 0.18, canvas.width * 0.48);
+      glow.addColorStop(0, hexToRgba(state.colors.accent, 0.2));
+      glow.addColorStop(1, hexToRgba(state.colors.accent, 0));
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      drawCalligraphyFlourish(ctx, canvas.width - 72, 92, canvas.width * 0.48, state.colors.accent, -1);
+      drawCalligraphyFlourish(ctx, 72, canvas.height - 92, canvas.width * 0.42, state.colors.accent, 1);
+      ctx.globalAlpha = 0.5;
+      ctx.fillStyle = state.colors.accent;
+      for (let i = 0; i < 5; i++) {
+        ctx.beginPath();
+        ctx.arc(canvas.width - 92 - i * 24, 310 + i * 18, 3 + i * 0.7, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = state.colors.accent;
+    }
     if (style === 'elegant-grid') {
       ctx.strokeStyle = '#172033';
       ctx.globalAlpha = 0.1;
@@ -364,6 +383,35 @@ const CanvasRenderer = (() => {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('IG', x + 26, y + 27);
+  }
+
+  function drawCalligraphyFlourish(ctx, originX, originY, size, color, direction) {
+    const d = direction || 1;
+    ctx.save();
+    ctx.translate(originX, originY);
+    ctx.scale(d, 1);
+    ctx.strokeStyle = color;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.globalAlpha = 0.82;
+    ctx.lineWidth = Math.max(4, size * 0.018);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.bezierCurveTo(size * 0.12, size * 0.03, size * 0.12, size * 0.3, size * 0.36, size * 0.22);
+    ctx.bezierCurveTo(size * 0.62, size * 0.13, size * 0.46, -size * 0.14, size * 0.25, size * 0.02);
+    ctx.bezierCurveTo(size * 0.08, size * 0.16, size * 0.28, size * 0.46, size * 0.7, size * 0.35);
+    ctx.stroke();
+    ctx.globalAlpha = 0.48;
+    ctx.lineWidth = Math.max(2, size * 0.007);
+    ctx.beginPath();
+    ctx.moveTo(size * 0.08, size * 0.08);
+    ctx.bezierCurveTo(size * 0.3, -size * 0.08, size * 0.58, size * 0.06, size * 0.76, size * 0.28);
+    ctx.bezierCurveTo(size * 0.88, size * 0.43, size * 0.74, size * 0.58, size * 0.56, size * 0.48);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(size * 0.4, size * 0.2, size * 0.12, Math.PI * 0.2, Math.PI * 1.9);
+    ctx.stroke();
+    ctx.restore();
   }
 
   function drawFrame(ctx, canvas, state) {

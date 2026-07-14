@@ -134,6 +134,7 @@ function getDefaultTemplates_() {
     ['tpl-focus-rings', 'Focus Rings', 'Professional Modern', '#101828', '#F97316', 'focus-rings', 88, '#FFFFFF', '#FED7AA', 0.2, 'Poppins'],
     ['tpl-signal-lines', 'Signal Lines', 'Professional Modern', '#08111F', '#22C55E', 'signal-lines', 84, '#ECFDF5', '#BBF7D0', 0.16, 'Inter'],
     ['tpl-ivory-grid', 'Ivory Grid', 'Elegant Grid', '#F4F0E8', '#B08D57', 'elegant-grid', 86, null, '#172033', '#667085', 0.06, 'Poppins'],
+    ['tpl-noir-calligraphy', 'Noir Calligraphy', 'Calligraphy Elegant', '#11100E', '#C9A96E', 'calligraphy-flourish', 90, null, '#F7F0E3', '#D8CCB8', 0.16, 'Poppins'],
     ['tpl-merdeka-proklamasi', 'Merdeka Proklamasi', 'Kemerdekaan 17 Agustus', '#B91C1C', '#FFFFFF', 'merdeka-ribbon', 92, '#FFFFFF', '#FEE2E2', 0.18, 'Oswald'],
     ['tpl-merah-putih-modern', 'Merah Putih Modern', 'Kemerdekaan 17 Agustus', '#FAFAFA', '#DC2626', 'red-white-modern', 88, '#111827', '#4B5563', 0.08, 'Poppins'],
     ['tpl-nusantara-bold', 'Nusantara Bold', 'Kemerdekaan 17 Agustus', '#7F1D1D', '#FACC15', 'nusantara-bold', 96, '#FFF7ED', '#FED7AA', 0.2, 'Oswald']
