@@ -1,0 +1,87 @@
+function saveDesignHistory(data) {
+  try {
+    var row = {
+      DesignID: data.DesignID || generateUniqueId('DSN'),
+      Timestamp: data.Timestamp || getCurrentIsoDate(),
+      Title: sanitizeInput(data.Title || data.title),
+      Description: sanitizeInput(data.Description || data.description || ''),
+      Category: sanitizeInput(data.Category || data.category || ''),
+      TemplateID: sanitizeInput(data.TemplateID || data.templateId || ''),
+      TemplateName: sanitizeInput(data.TemplateName || data.templateName || ''),
+      Format: sanitizeInput(data.Format || data.format || ''),
+      FileName: sanitizeInput(data.FileName || data.fileName || ''),
+      FileID: sanitizeInput(data.FileID || data.fileId || ''),
+      FileURL: sanitizeInput(data.FileURL || data.fileUrl || ''),
+      ThumbnailURL: sanitizeInput(data.ThumbnailURL || data.thumbnailUrl || ''),
+      Status: sanitizeInput(data.Status || data.status || 'Saved')
+    };
+    appendSheetObject(APP_CONFIG.SHEETS.HISTORY, row);
+    return createSuccessResponse(row, 'Riwayat desain berhasil disimpan.');
+  } catch (error) {
+    return createErrorResponse(error);
+  }
+}
+
+function getDesignHistory(filters) {
+  try {
+    filters = filters || {};
+    var rows = readSheetObjects(APP_CONFIG.SHEETS.HISTORY).reverse();
+    var query = sanitizeInput(filters.query || '').toLowerCase();
+    var template = sanitizeInput(filters.template || '');
+    var format = sanitizeInput(filters.format || '');
+    var date = sanitizeInput(filters.date || '');
+
+    var filtered = rows.filter(function(row) {
+      var matchesQuery = !query || String(row.Title + ' ' + row.Description).toLowerCase().indexOf(query) > -1;
+      var matchesTemplate = !template || row.TemplateID === template || row.TemplateName === template;
+      var matchesFormat = !format || row.Format === format;
+      var matchesDate = !date || String(row.Timestamp).indexOf(date) === 0;
+      return matchesQuery && matchesTemplate && matchesFormat && matchesDate;
+    });
+    return createSuccessResponse(filtered, 'Riwayat desain berhasil dimuat.');
+  } catch (error) {
+    return createErrorResponse(error);
+  }
+}
+
+function deleteGeneratedDesign(designId) {
+  try {
+    var history = readSheetObjects(APP_CONFIG.SHEETS.HISTORY);
+    var item = history.filter(function(row) {
+      return row.DesignID === designId;
+    })[0];
+    if (item && item.FileID) {
+      try {
+        DriveApp.getFileById(item.FileID).setTrashed(true);
+      } catch (driveError) {}
+    }
+    var deleted = deleteSheetObject(APP_CONFIG.SHEETS.HISTORY, 'DesignID', designId);
+    return createSuccessResponse({ deleted: deleted }, deleted ? 'Desain berhasil dihapus.' : 'Desain tidak ditemukan.');
+  } catch (error) {
+    return createErrorResponse(error);
+  }
+}
+
+function duplicateDesign(designId) {
+  try {
+    var history = readSheetObjects(APP_CONFIG.SHEETS.HISTORY);
+    var source = history.filter(function(row) {
+      return row.DesignID === designId;
+    })[0];
+    if (!source) throw new Error('Desain tidak ditemukan.');
+
+    var copy = {};
+    Object.keys(source).forEach(function(key) {
+      copy[key] = source[key];
+    });
+    copy.DesignID = generateUniqueId('DSN');
+    copy.Timestamp = getCurrentIsoDate();
+    copy.Title = source.Title + ' Copy';
+    copy.Status = 'Duplicated';
+    appendSheetObject(APP_CONFIG.SHEETS.HISTORY, copy);
+    return createSuccessResponse(copy, 'Desain berhasil diduplikat.');
+  } catch (error) {
+    return createErrorResponse(error);
+  }
+}
+

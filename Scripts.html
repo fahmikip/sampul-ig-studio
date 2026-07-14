@@ -1,0 +1,482 @@
+<script>
+const App = {
+  data: window.__INITIAL_DATA__ || {},
+  state: null,
+  renderTimer: null
+};
+
+document.addEventListener('DOMContentLoaded', initApp);
+
+function initApp() {
+  const templates = App.data.templates || [];
+  const firstTemplate = templates.find((item) => item.TemplateID === App.data.settings.DefaultTemplateID) || templates[0];
+  App.state = {
+    format: (App.data.formats || [])[0],
+    template: firstTemplate,
+    content: Object.assign({}, FRONTEND_DEFAULTS.content, { username: App.data.settings.InstagramUsername || '@overthinkingit.id' }),
+    photo: Object.assign({}, FRONTEND_DEFAULTS.photo, { image: null, dataUrl: '' }),
+    colors: colorsFromTemplate(firstTemplate),
+    toggles: Object.assign({}, FRONTEND_DEFAULTS.toggles),
+    lastFitWarning: ''
+  };
+
+  populateSelects();
+  bindEvents();
+  syncFormFromState();
+  renderTemplateGrid();
+  renderNow();
+}
+
+function populateSelects() {
+  fillSelect('formatSelect', App.data.formats, 'id', (item) => `${item.name} (${item.width} x ${item.height})`);
+  fillSelect('colorPresetSelect', App.data.colorPresets, 'id', 'name');
+  const categories = Array.from(new Set((App.data.templates || []).map((item) => item.Category)));
+  fillSelect('categorySelect', [{ id: '', name: 'Semua kategori' }].concat(categories.map((name) => ({ id: name, name }))), 'id', 'name');
+  fillSelect('historyFormat', [{ id: '', name: 'Semua format' }].concat(App.data.formats || []), 'id', 'name');
+}
+
+function fillSelect(id, items, valueKey, labelKey) {
+  const select = document.getElementById(id);
+  if (!select) return;
+  select.innerHTML = '';
+  (items || []).forEach((item) => {
+    const option = document.createElement('option');
+    option.value = item[valueKey];
+    option.textContent = typeof labelKey === 'function' ? labelKey(item) : item[labelKey];
+    select.appendChild(option);
+  });
+}
+
+function bindEvents() {
+  document.querySelectorAll('.tab-button').forEach((button) => {
+    button.addEventListener('click', () => switchTab(button.dataset.tab));
+  });
+
+  ['titleInput', 'descriptionInput', 'labelInput', 'seriesInput', 'usernameInput', 'ctaInput'].forEach((id) => {
+    document.getElementById(id).addEventListener('input', updateContentFromForm);
+  });
+
+  document.getElementById('formatSelect').addEventListener('change', (event) => {
+    App.state.format = App.data.formats.find((item) => item.id === event.target.value) || App.state.format;
+    scheduleRender();
+  });
+
+  document.getElementById('categorySelect').addEventListener('change', renderTemplateGrid);
+  document.getElementById('templateGrid').addEventListener('click', (event) => {
+    const card = event.target.closest('[data-template-id]');
+    if (!card) return;
+    const template = App.data.templates.find((item) => item.TemplateID === card.dataset.templateId);
+    if (!template) return;
+    App.state.template = template;
+    App.state.colors = colorsFromTemplate(template);
+    syncStyleControls();
+    renderTemplateGrid();
+    scheduleRender();
+  });
+
+  document.getElementById('sampleBtn').addEventListener('click', useSampleText);
+  document.getElementById('resetBtn').addEventListener('click', resetContent);
+  document.getElementById('photoInput').addEventListener('change', handlePhotoUpload);
+  document.getElementById('resetPhotoBtn').addEventListener('click', resetPhotoSettings);
+  document.getElementById('removePhotoBtn').addEventListener('click', removePhoto);
+
+  ['photoZoom', 'photoX', 'photoY', 'brightness', 'contrast', 'saturation', 'blur', 'overlayOpacity'].forEach((id) => {
+    document.getElementById(id).addEventListener('input', updatePhotoControls);
+  });
+  document.getElementById('grayscale').addEventListener('change', updatePhotoControls);
+
+  ['backgroundColor', 'titleColor', 'descriptionColor', 'accentColor', 'overlayColor', 'frameColor'].forEach((id) => {
+    document.getElementById(id).addEventListener('input', updateColorsFromControls);
+  });
+  document.getElementById('colorPresetSelect').addEventListener('change', applyColorPreset);
+  document.getElementById('restoreTemplateColorsBtn').addEventListener('click', () => {
+    App.state.colors = colorsFromTemplate(App.state.template);
+    syncStyleControls();
+    scheduleRender();
+  });
+
+  Object.keys(App.state.toggles).forEach((key) => {
+    document.getElementById(key).addEventListener('change', (event) => {
+      App.state.toggles[key] = event.target.checked;
+      scheduleRender();
+    });
+  });
+
+  document.getElementById('downloadPngBtn').addEventListener('click', () => downloadImage('png'));
+  document.getElementById('downloadPngTopBtn').addEventListener('click', () => downloadImage('png'));
+  document.getElementById('downloadJpgBtn').addEventListener('click', () => downloadImage('jpg'));
+  document.getElementById('saveDriveBtn').addEventListener('click', saveToDrive);
+  document.getElementById('adminOpenBtn').addEventListener('click', openAdmin);
+  document.getElementById('historyOpenBtn').addEventListener('click', openHistory);
+  document.getElementById('historyRefreshBtn').addEventListener('click', loadHistory);
+  document.getElementById('historySearch').addEventListener('input', debounce(loadHistory, 350));
+  document.getElementById('historyFormat').addEventListener('change', loadHistory);
+  document.getElementById('adminSaveTemplateBtn').addEventListener('click', saveAdminTemplate);
+  document.getElementById('adminDuplicateTemplateBtn').addEventListener('click', duplicateActiveTemplate);
+  document.getElementById('adminDeleteTemplateBtn').addEventListener('click', deleteActiveTemplate);
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-button').forEach((button) => button.classList.toggle('active', button.dataset.tab === tab));
+  document.querySelectorAll('.tab-panel').forEach((panel) => panel.classList.toggle('active', panel.id === 'tab-' + tab));
+}
+
+function syncFormFromState() {
+  document.getElementById('formatSelect').value = App.state.format.id;
+  document.getElementById('titleInput').value = App.state.content.title;
+  document.getElementById('descriptionInput').value = App.state.content.description;
+  document.getElementById('labelInput').value = App.state.content.label;
+  document.getElementById('seriesInput').value = App.state.content.series;
+  document.getElementById('usernameInput').value = App.state.content.username;
+  document.getElementById('ctaInput').value = App.state.content.cta;
+  syncPhotoControls();
+  syncStyleControls();
+  updateCounters();
+}
+
+function updateContentFromForm() {
+  App.state.content.title = safeText(document.getElementById('titleInput').value);
+  App.state.content.description = safeText(document.getElementById('descriptionInput').value);
+  App.state.content.label = safeText(document.getElementById('labelInput').value);
+  App.state.content.series = safeText(document.getElementById('seriesInput').value);
+  App.state.content.username = safeText(document.getElementById('usernameInput').value);
+  App.state.content.cta = safeText(document.getElementById('ctaInput').value);
+  updateCounters();
+  scheduleRender();
+}
+
+function updateCounters() {
+  const titleLength = document.getElementById('titleInput').value.length;
+  const descriptionLength = document.getElementById('descriptionInput').value.length;
+  document.getElementById('titleCount').textContent = `${titleLength}/90`;
+  document.getElementById('descriptionCount').textContent = `${descriptionLength}/180`;
+  document.getElementById('titleWarning').textContent = titleLength > 90 ? 'Judul panjang akan diperkecil otomatis saat dirender.' : '';
+}
+
+function renderTemplateGrid() {
+  const selectedCategory = document.getElementById('categorySelect').value;
+  const grid = document.getElementById('templateGrid');
+  grid.innerHTML = '';
+  (App.data.templates || [])
+    .filter((template) => !selectedCategory || template.Category === selectedCategory)
+    .forEach((template) => grid.appendChild(createTemplateCard(template, App.state.template.TemplateID)));
+}
+
+function useSampleText() {
+  const sample = App.data.exampleContent[Math.floor(Math.random() * App.data.exampleContent.length)];
+  App.state.content = Object.assign({}, App.state.content, sample);
+  syncFormFromState();
+  scheduleRender();
+}
+
+function resetContent() {
+  App.state.content = Object.assign({}, FRONTEND_DEFAULTS.content, { username: App.data.settings.InstagramUsername || '@overthinkingit.id' });
+  syncFormFromState();
+  scheduleRender();
+}
+
+function handlePhotoUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    showToast('Format foto tidak didukung.', 'error');
+    return;
+  }
+  if (file.size > Number(App.data.settings.MaxUploadSize || 10485760)) {
+    showToast('Ukuran foto melebihi 10 MB.', 'error');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const image = new Image();
+    image.onload = () => {
+      App.state.photo.image = image;
+      App.state.photo.dataUrl = reader.result;
+      scheduleRender();
+      showToast('Foto berhasil dimuat.', 'success');
+    };
+    image.onerror = () => showToast('Foto gagal dibaca.', 'error');
+    image.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function updatePhotoControls() {
+  App.state.photo.zoom = Number(document.getElementById('photoZoom').value);
+  App.state.photo.x = Number(document.getElementById('photoX').value);
+  App.state.photo.y = Number(document.getElementById('photoY').value);
+  App.state.photo.brightness = Number(document.getElementById('brightness').value);
+  App.state.photo.contrast = Number(document.getElementById('contrast').value);
+  App.state.photo.saturation = Number(document.getElementById('saturation').value);
+  App.state.photo.blur = Number(document.getElementById('blur').value);
+  App.state.photo.overlayOpacity = Number(document.getElementById('overlayOpacity').value);
+  App.state.photo.grayscale = document.getElementById('grayscale').checked;
+  scheduleRender();
+}
+
+function syncPhotoControls() {
+  document.getElementById('photoZoom').value = App.state.photo.zoom;
+  document.getElementById('photoX').value = App.state.photo.x;
+  document.getElementById('photoY').value = App.state.photo.y;
+  document.getElementById('brightness').value = App.state.photo.brightness;
+  document.getElementById('contrast').value = App.state.photo.contrast;
+  document.getElementById('saturation').value = App.state.photo.saturation;
+  document.getElementById('blur').value = App.state.photo.blur;
+  document.getElementById('overlayOpacity').value = App.state.photo.overlayOpacity;
+  document.getElementById('grayscale').checked = App.state.photo.grayscale;
+}
+
+function resetPhotoSettings() {
+  const existingImage = App.state.photo.image;
+  const dataUrl = App.state.photo.dataUrl;
+  App.state.photo = Object.assign({}, FRONTEND_DEFAULTS.photo, { image: existingImage, dataUrl });
+  syncPhotoControls();
+  scheduleRender();
+}
+
+function removePhoto() {
+  App.state.photo.image = null;
+  App.state.photo.dataUrl = '';
+  document.getElementById('photoInput').value = '';
+  scheduleRender();
+}
+
+function colorsFromTemplate(template) {
+  return {
+    background: template.BackgroundValue || '#0F0F0F',
+    title: template.TitleColor || '#F8F8F8',
+    description: template.DescriptionColor || '#D4D4D4',
+    accent: template.AccentColor || '#E53935',
+    overlay: template.OverlayColor || '#000000',
+    frame: template.AccentColor || '#2B2B2B'
+  };
+}
+
+function syncStyleControls() {
+  document.getElementById('backgroundColor').value = normalizeHex(App.state.colors.background);
+  document.getElementById('titleColor').value = normalizeHex(App.state.colors.title);
+  document.getElementById('descriptionColor').value = normalizeHex(App.state.colors.description);
+  document.getElementById('accentColor').value = normalizeHex(App.state.colors.accent);
+  document.getElementById('overlayColor').value = normalizeHex(App.state.colors.overlay);
+  document.getElementById('frameColor').value = normalizeHex(App.state.colors.frame);
+  Object.keys(App.state.toggles).forEach((key) => document.getElementById(key).checked = App.state.toggles[key]);
+}
+
+function updateColorsFromControls() {
+  App.state.colors.background = document.getElementById('backgroundColor').value;
+  App.state.colors.title = document.getElementById('titleColor').value;
+  App.state.colors.description = document.getElementById('descriptionColor').value;
+  App.state.colors.accent = document.getElementById('accentColor').value;
+  App.state.colors.overlay = document.getElementById('overlayColor').value;
+  App.state.colors.frame = document.getElementById('frameColor').value;
+  scheduleRender();
+}
+
+function applyColorPreset(event) {
+  const preset = App.data.colorPresets.find((item) => item.id === event.target.value);
+  if (!preset) return;
+  App.state.colors = {
+    background: preset.background,
+    title: preset.title,
+    description: preset.description,
+    accent: preset.accent,
+    overlay: preset.overlay,
+    frame: preset.frame
+  };
+  syncStyleControls();
+  scheduleRender();
+}
+
+function scheduleRender() {
+  window.clearTimeout(App.renderTimer);
+  App.renderTimer = window.setTimeout(() => requestAnimationFrame(renderNow), 80);
+}
+
+function renderNow() {
+  const canvas = document.getElementById('coverCanvas');
+  CanvasRenderer.render(canvas, App.state, false);
+  document.getElementById('activeTemplateName').textContent = App.state.template.TemplateName;
+  document.getElementById('canvasSizeLabel').textContent = `${App.state.format.name} - ${App.state.format.width} x ${App.state.format.height}`;
+  document.getElementById('fitStatus').textContent = App.state.lastFitWarning || 'Siap';
+}
+
+function downloadImage(type) {
+  renderNow();
+  const canvas = document.getElementById('coverCanvas');
+  const title = slugifyClient(App.state.content.title);
+  const date = new Date().toISOString().slice(0, 10);
+  const fileName = `sampul-ig-${title}-${date}.${type === 'jpg' ? 'jpg' : 'png'}`;
+  const mime = type === 'jpg' ? 'image/jpeg' : 'image/png';
+  const quality = Number(document.getElementById('jpgQuality').value || 0.95);
+  const link = document.createElement('a');
+  link.download = fileName;
+  link.href = type === 'jpg' ? canvas.toDataURL(mime, quality) : canvas.toDataURL(mime);
+  link.click();
+  showToast('File mulai diunduh.', 'success');
+}
+
+function saveToDrive() {
+  renderNow();
+  const canvas = document.getElementById('coverCanvas');
+  const title = slugifyClient(App.state.content.title);
+  const date = new Date().toISOString().slice(0, 10);
+  const fileName = `sampul-ig-${title}-${date}.png`;
+  const payload = canvas.toDataURL('image/png');
+  const metadata = {
+    title: App.state.content.title,
+    description: App.state.content.description,
+    category: App.state.content.label,
+    templateId: App.state.template.TemplateID,
+    templateName: App.state.template.TemplateName,
+    format: App.state.format.name
+  };
+  showToast('Menyimpan ke Google Drive...');
+  google.script.run
+    .withSuccessHandler((response) => {
+      if (response.success) showToast('Berhasil disimpan ke Drive.', 'success');
+      else showToast(response.message, 'error');
+    })
+    .withFailureHandler((error) => showToast(error.message, 'error'))
+    .saveGeneratedImage(payload, fileName, 'image/png', metadata);
+}
+
+function openAdmin() {
+  const t = App.state.template;
+  document.getElementById('adminTemplateName').value = t.TemplateName;
+  document.getElementById('adminCategory').value = t.Category;
+  document.getElementById('adminBackground').value = normalizeHex(t.BackgroundValue);
+  document.getElementById('adminTitleColor').value = normalizeHex(t.TitleColor);
+  document.getElementById('adminDescriptionColor').value = normalizeHex(t.DescriptionColor);
+  document.getElementById('adminAccent').value = normalizeHex(t.AccentColor);
+  document.getElementById('adminFontTitle').value = t.FontTitle || 'Oswald';
+  document.getElementById('adminTitleSize').value = t.TitleFontSize || 92;
+  document.getElementById('adminIsActive').checked = Boolean(t.IsActive);
+  openModal('adminModal');
+}
+
+function saveAdminTemplate() {
+  const t = Object.assign({}, App.state.template, {
+    TemplateName: safeText(document.getElementById('adminTemplateName').value),
+    Category: safeText(document.getElementById('adminCategory').value),
+    BackgroundValue: document.getElementById('adminBackground').value,
+    TitleColor: document.getElementById('adminTitleColor').value,
+    DescriptionColor: document.getElementById('adminDescriptionColor').value,
+    AccentColor: document.getElementById('adminAccent').value,
+    FontTitle: safeText(document.getElementById('adminFontTitle').value),
+    TitleFontSize: Number(document.getElementById('adminTitleSize').value),
+    IsActive: document.getElementById('adminIsActive').checked
+  });
+  google.script.run
+    .withSuccessHandler((response) => {
+      if (!response.success) return showToast(response.message, 'error');
+      const index = App.data.templates.findIndex((item) => item.TemplateID === t.TemplateID);
+      if (index >= 0) App.data.templates[index] = response.data;
+      App.state.template = response.data;
+      App.state.colors = colorsFromTemplate(response.data);
+      syncStyleControls();
+      renderTemplateGrid();
+      scheduleRender();
+      showToast('Template diperbarui.', 'success');
+    })
+    .withFailureHandler((error) => showToast(error.message, 'error'))
+    .updateTemplate(t);
+}
+
+function duplicateActiveTemplate() {
+  const copy = Object.assign({}, App.state.template, {
+    TemplateID: '',
+    TemplateName: App.state.template.TemplateName + ' Copy'
+  });
+  google.script.run
+    .withSuccessHandler((response) => {
+      if (!response.success) return showToast(response.message, 'error');
+      App.data.templates.push(response.data);
+      App.state.template = response.data;
+      renderTemplateGrid();
+      scheduleRender();
+      showToast('Template diduplikat.', 'success');
+    })
+    .withFailureHandler((error) => showToast(error.message, 'error'))
+    .saveTemplate(copy);
+}
+
+function deleteActiveTemplate() {
+  if (!confirm('Hapus template aktif?')) return;
+  const id = App.state.template.TemplateID;
+  google.script.run
+    .withSuccessHandler((response) => {
+      if (!response.success) return showToast(response.message, 'error');
+      App.data.templates = App.data.templates.filter((item) => item.TemplateID !== id);
+      App.state.template = App.data.templates[0];
+      App.state.colors = colorsFromTemplate(App.state.template);
+      renderTemplateGrid();
+      scheduleRender();
+      showToast('Template dihapus.', 'success');
+    })
+    .withFailureHandler((error) => showToast(error.message, 'error'))
+    .deleteTemplate(id);
+}
+
+function openHistory() {
+  openModal('historyModal');
+  loadHistory();
+}
+
+function loadHistory() {
+  const filters = {
+    query: document.getElementById('historySearch').value,
+    format: document.getElementById('historyFormat').value
+  };
+  google.script.run
+    .withSuccessHandler((response) => {
+      const grid = document.getElementById('historyGrid');
+      grid.innerHTML = '';
+      if (!response.success) return showToast(response.message, 'error');
+      if (!response.data.length) {
+        grid.innerHTML = '<p class="field-warning">Belum ada riwayat desain.</p>';
+        return;
+      }
+      response.data.forEach((item) => grid.appendChild(createHistoryCard(item)));
+    })
+    .withFailureHandler((error) => showToast(error.message, 'error'))
+    .getDesignHistory(filters);
+}
+
+function deleteHistoryItem(designId) {
+  if (!confirm('Hapus desain ini dari riwayat dan Drive?')) return;
+  google.script.run
+    .withSuccessHandler((response) => {
+      if (response.success) {
+        showToast('Riwayat dihapus.', 'success');
+        loadHistory();
+      } else {
+        showToast(response.message, 'error');
+      }
+    })
+    .withFailureHandler((error) => showToast(error.message, 'error'))
+    .deleteGeneratedDesign(designId);
+}
+
+function safeText(value) {
+  return String(value || '').replace(/[<>]/g, '').replace(/javascript:/gi, '').trim();
+}
+
+function slugifyClient(value) {
+  return safeText(value).toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 70) || 'desain';
+}
+
+function normalizeHex(value) {
+  const text = String(value || '#000000');
+  return /^#[0-9a-f]{6}$/i.test(text) ? text : '#000000';
+}
+
+function debounce(fn, delay) {
+  let timer;
+  return function debounced() {
+    window.clearTimeout(timer);
+    const args = arguments;
+    timer = window.setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+</script>
+

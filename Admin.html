@@ -1,0 +1,29 @@
+<div class="modal-backdrop" id="adminModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Template Manager</h2>
+      <button class="icon-button" data-close-modal="adminModal" type="button">Tutup</button>
+    </div>
+    <div class="two-col">
+      <div class="field-row"><label>Nama template</label><input id="adminTemplateName" type="text"></div>
+      <div class="field-row"><label>Kategori</label><input id="adminCategory" type="text"></div>
+    </div>
+    <div class="color-grid">
+      <label>Background<input id="adminBackground" type="color" value="#0f0f0f"></label>
+      <label>Judul<input id="adminTitleColor" type="color" value="#f8f8f8"></label>
+      <label>Deskripsi<input id="adminDescriptionColor" type="color" value="#d4d4d4"></label>
+      <label>Accent<input id="adminAccent" type="color" value="#e53935"></label>
+    </div>
+    <div class="two-col">
+      <div class="field-row"><label>Font judul</label><input id="adminFontTitle" type="text" value="Oswald"></div>
+      <div class="field-row"><label>Ukuran judul</label><input id="adminTitleSize" type="number" value="92"></div>
+    </div>
+    <label class="check-row"><input id="adminIsActive" checked type="checkbox"> Template aktif</label>
+    <div class="button-row">
+      <button class="primary-button" id="adminSaveTemplateBtn" type="button">Simpan template</button>
+      <button class="secondary-button" id="adminDuplicateTemplateBtn" type="button">Duplikat aktif</button>
+      <button class="ghost-button" id="adminDeleteTemplateBtn" type="button">Hapus aktif</button>
+    </div>
+  </div>
+</div>
+

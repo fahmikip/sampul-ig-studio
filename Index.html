@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <base target="_top">
+  <title>Sampul IG Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Oswald:wght@500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <?!= include('Styles'); ?>
+</head>
+<body>
+  <script>
+    window.__INITIAL_DATA__ = <?!= initialData ?>;
+  </script>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Generator Sampul Instagram</p>
+        <h1>Sampul IG Studio</h1>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-button" id="historyOpenBtn" title="Riwayat desain" type="button">Riwayat</button>
+        <button class="icon-button" id="adminOpenBtn" title="Template manager" type="button">Admin</button>
+        <button class="primary-button" id="downloadPngTopBtn" type="button">Download PNG</button>
+      </div>
+    </header>
+
+    <main class="studio-layout">
+      <aside class="control-panel" aria-label="Panel pengaturan">
+        <nav class="tabbar" aria-label="Tab pengaturan">
+          <button class="tab-button active" data-tab="content" type="button">Content</button>
+          <button class="tab-button" data-tab="template" type="button">Template</button>
+          <button class="tab-button" data-tab="photo" type="button">Photo</button>
+          <button class="tab-button" data-tab="style" type="button">Style</button>
+          <button class="tab-button" data-tab="export" type="button">Export</button>
+        </nav>
+
+        <section class="tab-panel active" id="tab-content">
+          <div class="field-row">
+            <label for="formatSelect">Format</label>
+            <select id="formatSelect"></select>
+          </div>
+          <div class="field-row">
+            <label for="titleInput">Judul utama <span id="titleCount">0/90</span></label>
+            <textarea id="titleInput" maxlength="120" rows="3"></textarea>
+            <p class="field-warning" id="titleWarning"></p>
+          </div>
+          <div class="field-row">
+            <label for="descriptionInput">Deskripsi singkat <span id="descriptionCount">0/180</span></label>
+            <textarea id="descriptionInput" maxlength="220" rows="4"></textarea>
+          </div>
+          <div class="two-col">
+            <div class="field-row">
+              <label for="labelInput">Label</label>
+              <input id="labelInput" maxlength="28" type="text">
+            </div>
+            <div class="field-row">
+              <label for="seriesInput">Nomor seri</label>
+              <input id="seriesInput" maxlength="18" type="text">
+            </div>
+          </div>
+          <div class="field-row">
+            <label for="usernameInput">Username Instagram</label>
+            <input id="usernameInput" maxlength="40" type="text">
+          </div>
+          <div class="field-row">
+            <label for="ctaInput">Call-to-action</label>
+            <input id="ctaInput" maxlength="48" type="text">
+          </div>
+          <div class="button-row">
+            <button class="secondary-button" id="sampleBtn" type="button">Contoh teks</button>
+            <button class="ghost-button" id="resetBtn" type="button">Reset</button>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="tab-template">
+          <div class="field-row">
+            <label for="categorySelect">Kategori template</label>
+            <select id="categorySelect"></select>
+          </div>
+          <div class="template-grid" id="templateGrid"></div>
+        </section>
+
+        <section class="tab-panel" id="tab-photo">
+          <div class="upload-box">
+            <input id="photoInput" accept="image/jpeg,image/png,image/webp" type="file">
+            <p>Upload foto JPG, PNG, atau WEBP maksimal 10 MB.</p>
+          </div>
+          <div class="two-col">
+            <div class="field-row"><label for="photoZoom">Zoom</label><input id="photoZoom" min="1" max="3" step="0.01" type="range"></div>
+            <div class="field-row"><label for="overlayOpacity">Overlay</label><input id="overlayOpacity" min="0" max="0.9" step="0.01" type="range"></div>
+          </div>
+          <div class="two-col">
+            <div class="field-row"><label for="photoX">Posisi X</label><input id="photoX" min="-1" max="1" step="0.01" type="range"></div>
+            <div class="field-row"><label for="photoY">Posisi Y</label><input id="photoY" min="-1" max="1" step="0.01" type="range"></div>
+          </div>
+          <div class="two-col">
+            <div class="field-row"><label for="brightness">Brightness</label><input id="brightness" min="0.4" max="1.8" step="0.01" type="range"></div>
+            <div class="field-row"><label for="contrast">Contrast</label><input id="contrast" min="0.4" max="1.8" step="0.01" type="range"></div>
+          </div>
+          <div class="two-col">
+            <div class="field-row"><label for="saturation">Saturation</label><input id="saturation" min="0" max="2" step="0.01" type="range"></div>
+            <div class="field-row"><label for="blur">Blur</label><input id="blur" min="0" max="12" step="0.5" type="range"></div>
+          </div>
+          <label class="check-row"><input id="grayscale" type="checkbox"> Grayscale</label>
+          <div class="button-row">
+            <button class="secondary-button" id="resetPhotoBtn" type="button">Reset foto</button>
+            <button class="ghost-button" id="removePhotoBtn" type="button">Hapus foto</button>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="tab-style">
+          <div class="field-row">
+            <label for="colorPresetSelect">Preset warna</label>
+            <select id="colorPresetSelect"></select>
+          </div>
+          <div class="color-grid">
+            <label>Background<input id="backgroundColor" type="color"></label>
+            <label>Judul<input id="titleColor" type="color"></label>
+            <label>Deskripsi<input id="descriptionColor" type="color"></label>
+            <label>Accent<input id="accentColor" type="color"></label>
+            <label>Overlay<input id="overlayColor" type="color"></label>
+            <label>Frame<input id="frameColor" type="color"></label>
+          </div>
+          <div class="toggle-grid">
+            <label><input id="showLogo" type="checkbox"> Logo</label>
+            <label><input id="showUsername" type="checkbox"> Username</label>
+            <label><input id="showLabel" type="checkbox"> Label</label>
+            <label><input id="showSeries" type="checkbox"> Nomor</label>
+            <label><input id="showDescription" type="checkbox"> Deskripsi</label>
+            <label><input id="showFooter" type="checkbox"> Footer</label>
+            <label><input id="showDecorations" type="checkbox"> Dekorasi</label>
+            <label><input id="showTexture" type="checkbox"> Texture</label>
+            <label><input id="showFrame" type="checkbox"> Frame</label>
+            <label><input id="showCta" type="checkbox"> CTA</label>
+          </div>
+          <button class="secondary-button full" id="restoreTemplateColorsBtn" type="button">Kembalikan warna template</button>
+        </section>
+
+        <section class="tab-panel" id="tab-export">
+          <div class="field-row">
+            <label for="jpgQuality">Kualitas JPG</label>
+            <select id="jpgQuality">
+              <option value="0.72">Rendah</option>
+              <option value="0.86">Sedang</option>
+              <option value="0.95" selected>Tinggi</option>
+            </select>
+          </div>
+          <div class="button-stack">
+            <button class="primary-button" id="downloadPngBtn" type="button">Download PNG</button>
+            <button class="secondary-button" id="downloadJpgBtn" type="button">Download JPG</button>
+            <button class="secondary-button" id="saveDriveBtn" type="button">Simpan ke Google Drive</button>
+          </div>
+        </section>
+      </aside>
+
+      <section class="preview-panel" aria-label="Preview sampul">
+        <div class="canvas-toolbar">
+          <div><strong id="activeTemplateName">Template</strong><span id="canvasSizeLabel"></span></div>
+          <span class="status-pill" id="fitStatus">Siap</span>
+        </div>
+        <div class="canvas-stage">
+          <canvas id="coverCanvas" width="1080" height="1350"></canvas>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <?!= include('Components'); ?>
+  <?!= include('Admin'); ?>
+  <?!= include('History'); ?>
+  <?!= include('TemplateConfig'); ?>
+  <?!= include('CanvasRenderer'); ?>
+  <?!= include('Scripts'); ?>
+</body>
+</html>
+

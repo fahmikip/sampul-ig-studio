@@ -1,0 +1,63 @@
+<div class="toast-host" id="toastHost"></div>
+
+<div class="modal-backdrop" id="confirmModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="confirmTitle">Konfirmasi</h2>
+      <button class="icon-button" data-close-modal="confirmModal" type="button">Tutup</button>
+    </div>
+    <p id="confirmMessage"></p>
+    <div class="button-row">
+      <button class="primary-button" id="confirmYesBtn" type="button">Ya</button>
+      <button class="ghost-button" data-close-modal="confirmModal" type="button">Batal</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function showToast(message, type) {
+  const host = document.getElementById('toastHost');
+  const item = document.createElement('div');
+  item.className = 'toast ' + (type || '');
+  item.textContent = message;
+  host.appendChild(item);
+  setTimeout(() => item.remove(), 3600);
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('active');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+document.addEventListener('click', (event) => {
+  const closeId = event.target.dataset.closeModal;
+  if (closeId) closeModal(closeId);
+});
+
+function createTemplateCard(template, activeId) {
+  const button = document.createElement('button');
+  button.className = 'template-card' + (template.TemplateID === activeId ? ' active' : '');
+  button.type = 'button';
+  button.dataset.templateId = template.TemplateID;
+  button.innerHTML = '<strong></strong><small></small>';
+  button.querySelector('strong').textContent = template.TemplateName;
+  button.querySelector('small').textContent = template.Category;
+  return button;
+}
+
+function createHistoryCard(item) {
+  const card = document.createElement('article');
+  card.className = 'history-card';
+  card.innerHTML = '<h3></h3><p></p><div class="button-row"><button class="secondary-button" data-action="open">Buka</button><button class="secondary-button" data-action="copy">Salin link</button><button class="ghost-button" data-action="delete">Hapus</button></div>';
+  card.querySelector('h3').textContent = item.Title || 'Tanpa judul';
+  card.querySelector('p').textContent = [item.TemplateName, item.Format, item.Timestamp].filter(Boolean).join(' - ');
+  card.querySelector('[data-action="open"]').onclick = () => item.FileURL && window.open(item.FileURL, '_blank');
+  card.querySelector('[data-action="copy"]').onclick = () => navigator.clipboard.writeText(item.FileURL || '').then(() => showToast('Link disalin.', 'success'));
+  card.querySelector('[data-action="delete"]').onclick = () => deleteHistoryItem(item.DesignID);
+  return card;
+}
+</script>
+

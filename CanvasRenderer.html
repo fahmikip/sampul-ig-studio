@@ -1,0 +1,236 @@
+<script>
+const CanvasRenderer = (() => {
+  function render(canvas, state, exportMode) {
+    const format = state.format;
+    const template = state.template;
+    canvas.width = format.width;
+    canvas.height = format.height;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawBackground(ctx, canvas, state);
+    drawPhoto(ctx, canvas, state);
+    drawOverlay(ctx, canvas, state);
+    if (state.toggles.showDecorations) drawDecorations(ctx, canvas, state);
+    drawText(ctx, canvas, state);
+    if (state.toggles.showFrame) drawFrame(ctx, canvas, state);
+    if (state.toggles.showTexture) drawGrain(ctx, canvas);
+    return { ok: true };
+  }
+
+  function drawBackground(ctx, canvas, state) {
+    const colors = state.colors;
+    const template = state.template;
+    if (template.BackgroundType === 'gradient' || (template.DecorationConfig || {}).style === 'gradient') {
+      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      gradient.addColorStop(0, colors.background);
+      gradient.addColorStop(0.52, colors.accent);
+      gradient.addColorStop(1, '#050505');
+      ctx.fillStyle = gradient;
+    } else {
+      ctx.fillStyle = colors.background;
+    }
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  function drawPhoto(ctx, canvas, state) {
+    if (!state.photo.image) return;
+    const img = state.photo.image;
+    const scale = Math.max(canvas.width / img.width, canvas.height / img.height) * state.photo.zoom;
+    const width = img.width * scale;
+    const height = img.height * scale;
+    const x = (canvas.width - width) / 2 + state.photo.x * canvas.width * 0.28;
+    const y = (canvas.height - height) / 2 + state.photo.y * canvas.height * 0.28;
+    ctx.save();
+    ctx.filter = `brightness(${state.photo.brightness}) contrast(${state.photo.contrast}) saturate(${state.photo.saturation}) blur(${state.photo.blur}px) grayscale(${state.photo.grayscale ? 1 : 0})`;
+    ctx.drawImage(img, x, y, width, height);
+    ctx.restore();
+  }
+
+  function drawOverlay(ctx, canvas, state) {
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, hexToRgba(state.colors.overlay, Math.min(state.photo.overlayOpacity + 0.12, 0.85)));
+    gradient.addColorStop(0.48, hexToRgba(state.colors.overlay, state.photo.overlayOpacity));
+    gradient.addColorStop(1, hexToRgba('#000000', Math.min(state.photo.overlayOpacity + 0.28, 0.9)));
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  function drawDecorations(ctx, canvas, state) {
+    const style = (state.template.DecorationConfig || {}).style || 'frame';
+    ctx.save();
+    ctx.strokeStyle = state.colors.accent;
+    ctx.fillStyle = state.colors.accent;
+    ctx.globalAlpha = 0.9;
+    if (style === 'diagonal' || style === 'neon') {
+      ctx.lineWidth = 12;
+      ctx.beginPath();
+      ctx.moveTo(canvas.width - 280, 90);
+      ctx.lineTo(canvas.width - 80, 90);
+      ctx.lineTo(canvas.width - 80, 290);
+      ctx.stroke();
+    }
+    if (style === 'bars' || style === 'list') {
+      for (let i = 0; i < 5; i++) ctx.fillRect(88 + i * 54, 250, 36, 8);
+    }
+    if (style === 'grid' || style === 'info') {
+      ctx.globalAlpha = 0.18;
+      ctx.lineWidth = 1;
+      for (let x = 0; x < canvas.width; x += 90) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += 90) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = 1;
+    ctx.fillRect(88, Math.min(canvas.height - 180, 1040), 180, 10);
+    ctx.restore();
+  }
+
+  function drawText(ctx, canvas, state) {
+    const t = state.template;
+    const c = state.content;
+    const scaleY = canvas.height / 1350;
+    const titlePos = scalePosition(t.TitlePosition, scaleY);
+    const descPos = scalePosition(t.DescriptionPosition, scaleY);
+    const labelPos = scalePosition(t.LabelPosition, scaleY);
+
+    if (state.toggles.showLabel && c.label) drawPill(ctx, c.label, labelPos.x, labelPos.y, state.colors.accent);
+    if (state.toggles.showSeries && c.series) drawSmallText(ctx, c.series, canvas.width - 88, labelPos.y + 20, state.colors.description, 'right');
+
+    const titleResult = drawAutoText(ctx, c.title, {
+      x: titlePos.x, y: titlePos.y, width: titlePos.width, maxLines: Number(t.MaxTitleLines || 3),
+      maxSize: Number(t.TitleFontSize || 96), minSize: 48, lineHeight: 1.02,
+      font: t.FontTitle || 'Oswald', weight: 700, color: state.colors.title, align: t.TextAlignment || 'left',
+      uppercase: true
+    });
+    state.lastFitWarning = titleResult.overflow ? 'Judul terlalu panjang' : '';
+
+    if (state.toggles.showDescription && c.description) {
+      drawAutoText(ctx, c.description, {
+        x: descPos.x, y: Math.max(descPos.y, titleResult.bottom + 36), width: descPos.width, maxLines: 4,
+        maxSize: Number(t.DescriptionFontSize || 34), minSize: 22, lineHeight: 1.35,
+        font: t.FontDescription || 'Inter', weight: 500, color: state.colors.description, align: 'left'
+      });
+    }
+
+    if (state.toggles.showLogo) drawLogoMark(ctx, 88, canvas.height - 150, state.colors.accent);
+    if (state.toggles.showUsername) drawSmallText(ctx, c.username, 156, canvas.height - 116, state.colors.description, 'left');
+    if (state.toggles.showCta && c.cta) drawSmallText(ctx, c.cta, canvas.width - 88, canvas.height - 116, state.colors.title, 'right');
+    if (state.toggles.showFooter) {
+      ctx.fillStyle = state.colors.accent;
+      ctx.fillRect(88, canvas.height - 72, canvas.width - 176, 2);
+    }
+  }
+
+  function scalePosition(pos, scaleY) {
+    return { x: Number(pos.x || 88), y: Number(pos.y || 470) * scaleY, width: Number(pos.width || 820), anchor: pos.anchor || 'left' };
+  }
+
+  function drawAutoText(ctx, text, options) {
+    text = String(text || '');
+    if (options.uppercase) text = text.toUpperCase();
+    let size = options.maxSize;
+    let lines = [];
+    do {
+      ctx.font = `${options.weight || 700} ${size}px ${options.font}, Arial, sans-serif`;
+      lines = wrapText(ctx, text, options.width);
+      if (lines.length <= options.maxLines) break;
+      size -= 4;
+    } while (size >= options.minSize);
+    const visible = lines.slice(0, options.maxLines);
+    const linePx = size * options.lineHeight;
+    ctx.fillStyle = options.color;
+    ctx.textAlign = options.align || 'left';
+    ctx.textBaseline = 'top';
+    ctx.font = `${options.weight || 700} ${size}px ${options.font}, Arial, sans-serif`;
+    visible.forEach((line, index) => {
+      const x = options.align === 'center' ? options.x + options.width / 2 : options.align === 'right' ? options.x + options.width : options.x;
+      ctx.fillText(line, x, options.y + index * linePx);
+    });
+    return { bottom: options.y + visible.length * linePx, overflow: lines.length > options.maxLines };
+  }
+
+  function wrapText(ctx, text, width) {
+    const words = text.split(/\s+/).filter(Boolean);
+    const lines = [];
+    let line = '';
+    words.forEach((word) => {
+      const test = line ? line + ' ' + word : word;
+      if (ctx.measureText(test).width > width && line) {
+        lines.push(line);
+        line = word;
+      } else {
+        line = test;
+      }
+    });
+    if (line) lines.push(line);
+    return lines.length ? lines : [''];
+  }
+
+  function drawPill(ctx, text, x, y, color) {
+    ctx.font = '700 24px Inter, Arial, sans-serif';
+    const width = ctx.measureText(text).width + 34;
+    ctx.fillStyle = color;
+    roundRect(ctx, x, y, width, 46, 23);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x + 17, y + 24);
+  }
+
+  function drawSmallText(ctx, text, x, y, color, align) {
+    ctx.font = '700 26px Inter, Arial, sans-serif';
+    ctx.fillStyle = color;
+    ctx.textAlign = align || 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(text || ''), x, y);
+  }
+
+  function drawLogoMark(ctx, x, y, color) {
+    ctx.fillStyle = color;
+    roundRect(ctx, x, y, 52, 52, 14);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = '800 24px Inter, Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('IG', x + 26, y + 27);
+  }
+
+  function drawFrame(ctx, canvas, state) {
+    ctx.strokeStyle = state.colors.frame;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(44, 44, canvas.width - 88, canvas.height - 88);
+  }
+
+  function drawGrain(ctx, canvas) {
+    ctx.save();
+    ctx.globalAlpha = 0.055;
+    ctx.fillStyle = '#fff';
+    for (let i = 0; i < 900; i++) ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, 1.2, 1.2);
+    ctx.restore();
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function hexToRgba(hex, alpha) {
+    const clean = String(hex || '#000000').replace('#', '');
+    const full = clean.length === 3 ? clean.split('').map((c) => c + c).join('') : clean;
+    const num = parseInt(full, 16);
+    return `rgba(${(num >> 16) & 255},${(num >> 8) & 255},${num & 255},${alpha})`;
+  }
+
+  return { render };
+})();
+</script>
+
