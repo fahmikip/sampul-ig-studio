@@ -135,6 +135,11 @@ function getDefaultTemplates_() {
     ['tpl-signal-lines', 'Signal Lines', 'Professional Modern', '#08111F', '#22C55E', 'signal-lines', 84, '#ECFDF5', '#BBF7D0', 0.16, 'Inter'],
     ['tpl-ivory-grid', 'Ivory Grid', 'Elegant Grid', '#F4F0E8', '#B08D57', 'elegant-grid', 86, null, '#172033', '#667085', 0.06, 'Poppins'],
     ['tpl-noir-calligraphy', 'Noir Calligraphy', 'Calligraphy Elegant', '#11100E', '#C9A96E', 'calligraphy-flourish', 90, null, '#F7F0E3', '#D8CCB8', 0.16, 'Poppins'],
+    ['tpl-emerald-diwani', 'Emerald Diwani', 'Calligraphy Elegant', '#082B25', '#D8B568', 'calligraphy-diwani', 88, null, '#FFF8E8', '#C9D8CE', 0.14, 'Poppins'],
+    ['tpl-ivory-manuscript', 'Ivory Manuscript', 'Calligraphy Elegant', '#EFE5D2', '#9A6B3F', 'calligraphy-manuscript', 84, null, '#30251D', '#6E5A49', 0.05, 'Poppins'],
+    ['tpl-midnight-thuluth', 'Midnight Thuluth', 'Calligraphy Elegant', '#111B38', '#D4AF67', 'calligraphy-thuluth', 92, null, '#FFF9ED', '#C9D2E7', 0.16, 'Oswald'],
+    ['tpl-rose-nastaliq', 'Rose Nastaliq', 'Calligraphy Elegant', '#3A1724', '#D9A68F', 'calligraphy-nastaliq', 86, null, '#FFF4EF', '#E8C8C1', 0.14, 'Poppins'],
+    ['tpl-royal-kufi', 'Royal Kufi', 'Calligraphy Elegant', '#21164A', '#E0C36E', 'calligraphy-kufi', 88, null, '#FFFBEA', '#D8D0EA', 0.15, 'Oswald'],
     ['tpl-merdeka-proklamasi', 'Merdeka Proklamasi', 'Kemerdekaan 17 Agustus', '#B91C1C', '#FFFFFF', 'merdeka-ribbon', 92, '#FFFFFF', '#FEE2E2', 0.18, 'Oswald'],
     ['tpl-merah-putih-modern', 'Merah Putih Modern', 'Kemerdekaan 17 Agustus', '#FAFAFA', '#DC2626', 'red-white-modern', 88, '#111827', '#4B5563', 0.08, 'Poppins'],
     ['tpl-nusantara-bold', 'Nusantara Bold', 'Kemerdekaan 17 Agustus', '#7F1D1D', '#FACC15', 'nusantara-bold', 96, '#FFF7ED', '#FED7AA', 0.2, 'Oswald']
