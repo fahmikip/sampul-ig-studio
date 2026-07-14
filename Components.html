@@ -48,9 +48,28 @@ function closeModal(id) {
   document.getElementById(id).classList.remove('active');
 }
 
+let pendingConfirmation = null;
+
+function requestConfirmation(message, onConfirm, title) {
+  document.getElementById('confirmTitle').textContent = title || 'Konfirmasi';
+  document.getElementById('confirmMessage').textContent = message;
+  pendingConfirmation = onConfirm;
+  openModal('confirmModal');
+}
+
+document.getElementById('confirmYesBtn').addEventListener('click', () => {
+  const action = pendingConfirmation;
+  pendingConfirmation = null;
+  closeModal('confirmModal');
+  if (typeof action === 'function') action();
+});
+
 document.addEventListener('click', (event) => {
   const closeId = event.target.dataset.closeModal;
-  if (closeId) closeModal(closeId);
+  if (closeId) {
+    if (closeId === 'confirmModal') pendingConfirmation = null;
+    closeModal(closeId);
+  }
 });
 
 function createTemplateCard(template, activeId) {

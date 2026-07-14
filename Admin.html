@@ -1,3 +1,21 @@
+<div class="modal-backdrop" id="adminAuthModal">
+  <div class="modal admin-auth-card" role="dialog" aria-modal="true" aria-labelledby="adminAuthTitle">
+    <div class="modal-header">
+      <h2 id="adminAuthTitle">Akses Admin</h2>
+      <button class="icon-button" data-close-modal="adminAuthModal" type="button">Tutup</button>
+    </div>
+    <p class="helper-text">Masukkan token admin untuk membuka Template Manager.</p>
+    <div class="field-row">
+      <label for="adminTokenInput">Token admin</label>
+      <input id="adminTokenInput" autocomplete="current-password" inputmode="text" placeholder="Tempel token admin" type="password">
+    </div>
+    <div class="button-row">
+      <button class="primary-button" id="adminTokenSubmitBtn" type="button">Buka Template Manager</button>
+      <button class="ghost-button" data-close-modal="adminAuthModal" type="button">Batal</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-backdrop" id="adminModal">
   <div class="modal">
     <div class="modal-header">

@@ -189,6 +189,10 @@ function bindEvents() {
   document.getElementById('openImageTabBtn').addEventListener('click', openMobileDownloadImage);
   document.getElementById('saveDriveBtn').addEventListener('click', saveToDrive);
   document.getElementById('adminOpenBtn').addEventListener('click', openAdmin);
+  document.getElementById('adminTokenSubmitBtn').addEventListener('click', submitAdminToken);
+  document.getElementById('adminTokenInput').addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') submitAdminToken();
+  });
   document.getElementById('historyOpenBtn').addEventListener('click', openHistory);
   document.getElementById('historyRefreshBtn').addEventListener('click', loadHistory);
   document.getElementById('historySearch').addEventListener('input', debounce(loadHistory, 350));
@@ -457,9 +461,31 @@ function saveToDrive() {
 }
 
 function openAdmin() {
-  const token = window.prompt('Masukkan token admin:');
-  if (!token) return;
+  if (App.adminToken) {
+    showAdminManager();
+    return;
+  }
+  const input = document.getElementById('adminTokenInput');
+  input.value = '';
+  openModal('adminAuthModal');
+  window.setTimeout(() => input.focus(), 100);
+}
+
+function submitAdminToken() {
+  const input = document.getElementById('adminTokenInput');
+  const token = input.value.trim();
+  if (!token) {
+    showToast('Token admin wajib diisi.', 'error');
+    input.focus();
+    return;
+  }
   App.adminToken = token;
+  input.value = '';
+  closeModal('adminAuthModal');
+  showAdminManager();
+}
+
+function showAdminManager() {
   const t = App.state.template;
   document.getElementById('adminTemplateName').value = t.TemplateName;
   document.getElementById('adminCategory').value = t.Category;
@@ -520,7 +546,10 @@ function duplicateActiveTemplate() {
 }
 
 function deleteActiveTemplate() {
-  if (!confirm('Hapus template aktif?')) return;
+  requestConfirmation('Template aktif akan dihapus permanen.', performDeleteActiveTemplate, 'Hapus template?');
+}
+
+function performDeleteActiveTemplate() {
   const id = App.state.template.TemplateID;
   google.script.run
     .withSuccessHandler((response) => {
@@ -563,7 +592,10 @@ function loadHistory() {
 }
 
 function deleteHistoryItem(designId) {
-  if (!confirm('Hapus desain ini dari riwayat dan Drive?')) return;
+  requestConfirmation('Desain akan dihapus dari riwayat dan Google Drive.', () => performDeleteHistoryItem(designId), 'Hapus desain?');
+}
+
+function performDeleteHistoryItem(designId) {
   google.script.run
     .withSuccessHandler((response) => {
       if (response.success) {
