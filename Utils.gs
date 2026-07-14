@@ -112,7 +112,7 @@ function jsonStringify(value) {
   return JSON.stringify(value === undefined ? null : value);
 }
 
-function serializeJsonForHtml(value) {
+function serializeJsonForHtml_(value) {
   return jsonStringify(value)
     .replace(/</g, '\\u003c')
     .replace(/>/g, '\\u003e')
@@ -121,7 +121,7 @@ function serializeJsonForHtml(value) {
     .replace(/\u2029/g, '\\u2029');
 }
 
-function escapeSpreadsheetFormula(value) {
+function escapeSpreadsheetFormula_(value) {
   if (typeof value !== 'string') return value;
   return /^[=+\-@]/.test(value) ? "'" + value : value;
 }

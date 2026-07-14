@@ -1,41 +1,43 @@
-function ensureApplicationReady() {
+function ensureApplicationReady_() {
   var props = PropertiesService.getScriptProperties();
   if (!props.getProperty('SpreadsheetID') || !props.getProperty('RootFolderID')) {
-    setupApplication();
+    setupApplication_();
+    return;
   }
+  ensureSheetColumns_(APP_CONFIG.SHEETS.HISTORY, getHistoryHeaders_());
 }
 
-function createApplicationFolders() {
+function createApplicationFolders_() {
   var props = PropertiesService.getScriptProperties();
   var rootFolderId = props.getProperty('RootFolderID');
-  var root = rootFolderId ? DriveApp.getFolderById(rootFolderId) : getOrCreateFolder(null, APP_CONFIG.ROOT_FOLDER_NAME);
+  var root = rootFolderId ? DriveApp.getFolderById(rootFolderId) : getOrCreateFolder_(null, APP_CONFIG.ROOT_FOLDER_NAME);
   props.setProperty('RootFolderID', root.getId());
 
   var names = ['Assets', 'Backgrounds', 'Logos', 'Icons', 'Textures', 'Uploads', 'Generated Covers', 'Thumbnails'];
   var folders = { RootFolderID: root.getId(), RootFolderURL: root.getUrl() };
   names.forEach(function(name) {
-    var folder = getOrCreateFolder(root, name);
+    var folder = getOrCreateFolder_(root, name);
     folders[name.replace(/\s+/g, '') + 'FolderID'] = folder.getId();
   });
   return folders;
 }
 
-function initializeSpreadsheet() {
+function initializeSpreadsheet_() {
   var props = PropertiesService.getScriptProperties();
   var spreadsheetId = props.getProperty('SpreadsheetID');
   var spreadsheet = spreadsheetId ? SpreadsheetApp.openById(spreadsheetId) : SpreadsheetApp.create(APP_CONFIG.APP_NAME + ' Database');
   props.setProperty('SpreadsheetID', spreadsheet.getId());
 
-  ensureSheet(APP_CONFIG.SHEETS.TEMPLATES, getTemplateHeaders());
-  ensureSheet(APP_CONFIG.SHEETS.HISTORY, getHistoryHeaders());
-  ensureSheet(APP_CONFIG.SHEETS.SETTINGS, getSettingsHeaders());
-  ensureSheetColumns(APP_CONFIG.SHEETS.HISTORY, getHistoryHeaders());
+  ensureSheet_(APP_CONFIG.SHEETS.TEMPLATES, getTemplateHeaders_());
+  ensureSheet_(APP_CONFIG.SHEETS.HISTORY, getHistoryHeaders_());
+  ensureSheet_(APP_CONFIG.SHEETS.SETTINGS, getSettingsHeaders_());
+  ensureSheetColumns_(APP_CONFIG.SHEETS.HISTORY, getHistoryHeaders_());
   return spreadsheet;
 }
 
-function initializeDefaultSettings() {
-  createApplicationFolders();
-  initializeSpreadsheet();
+function initializeDefaultSettings_() {
+  createApplicationFolders_();
+  initializeSpreadsheet_();
   var props = PropertiesService.getScriptProperties();
   var defaults = {
     InstagramUsername: '@overthinkingit.id',
@@ -49,17 +51,17 @@ function initializeDefaultSettings() {
     AppName: APP_CONFIG.APP_NAME
   };
   Object.keys(defaults).forEach(function(key) {
-    if (!getSetting(key)) {
-      setSetting(key, defaults[key], 'Pengaturan default aplikasi.');
+    if (!getSetting_(key)) {
+      setSetting_(key, defaults[key], 'Pengaturan default aplikasi.');
     }
   });
   return defaults;
 }
 
-function initializeDefaultTemplates() {
-  initializeSpreadsheet();
-  var existing = readSheetObjects(APP_CONFIG.SHEETS.TEMPLATES);
-  var templates = getDefaultTemplates();
+function initializeDefaultTemplates_() {
+  initializeSpreadsheet_();
+  var existing = readSheetObjects_(APP_CONFIG.SHEETS.TEMPLATES);
+  var templates = getDefaultTemplates_();
   if (existing.length > 0) {
     var existingIds = existing.map(function(row) {
       return row.TemplateID;
@@ -68,31 +70,31 @@ function initializeDefaultTemplates() {
       return existingIds.indexOf(template.TemplateID) === -1;
     });
     missingTemplates.forEach(function(template) {
-      appendSheetObject(APP_CONFIG.SHEETS.TEMPLATES, templateToSheetRow(template));
+      appendSheetObject_(APP_CONFIG.SHEETS.TEMPLATES, templateToSheetRow_(template));
     });
     CacheService.getScriptCache().removeAll([APP_CONFIG.CACHE_KEYS.TEMPLATES, APP_CONFIG.CACHE_KEYS.ACTIVE_TEMPLATES]);
     return existing.concat(missingTemplates);
   }
   templates.forEach(function(template) {
-    appendSheetObject(APP_CONFIG.SHEETS.TEMPLATES, templateToSheetRow(template));
+    appendSheetObject_(APP_CONFIG.SHEETS.TEMPLATES, templateToSheetRow_(template));
   });
   CacheService.getScriptCache().removeAll([APP_CONFIG.CACHE_KEYS.TEMPLATES, APP_CONFIG.CACHE_KEYS.ACTIVE_TEMPLATES]);
   return templates;
 }
 
-function getTemplateHeaders() {
+function getTemplateHeaders_() {
   return ['TemplateID', 'TemplateName', 'Category', 'SupportedFormat', 'BackgroundType', 'BackgroundValue', 'BackgroundImageID', 'FontTitle', 'FontDescription', 'TitleColor', 'DescriptionColor', 'AccentColor', 'OverlayColor', 'OverlayOpacity', 'TitlePosition', 'DescriptionPosition', 'LabelPosition', 'LogoPosition', 'UsernamePosition', 'TitleFontSize', 'DescriptionFontSize', 'MaxTitleLines', 'TextAlignment', 'DecorationConfig', 'IsActive', 'CreatedAt', 'UpdatedAt'];
 }
 
-function getHistoryHeaders() {
+function getHistoryHeaders_() {
   return ['DesignID', 'Timestamp', 'SessionID', 'Title', 'Description', 'Category', 'TemplateID', 'TemplateName', 'Format', 'FileName', 'FileID', 'FileURL', 'ThumbnailURL', 'Status'];
 }
 
-function getSettingsHeaders() {
+function getSettingsHeaders_() {
   return ['Key', 'Value', 'Description'];
 }
 
-function getDefaultTemplates() {
+function getDefaultTemplates_() {
   var now = getCurrentIsoDate();
   var specs = [
     ['tpl-cinematic-dark-story', 'Dark Story', 'Cinematic Dark', '#0F0F0F', '#E53935', 'diagonal', 106],
@@ -156,6 +158,6 @@ function getDefaultTemplates() {
   });
 }
 
-function templateToSheetRow(template) {
+function templateToSheetRow_(template) {
   return template;
 }

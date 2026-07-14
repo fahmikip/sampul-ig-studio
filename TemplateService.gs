@@ -1,9 +1,9 @@
-function getTemplates() {
+function getTemplates_() {
   var cache = CacheService.getScriptCache();
   var cached = cache.get(APP_CONFIG.CACHE_KEYS.TEMPLATES);
   if (cached) return JSON.parse(cached);
 
-  var rows = readSheetObjects(APP_CONFIG.SHEETS.TEMPLATES);
+  var rows = readSheetObjects_(APP_CONFIG.SHEETS.TEMPLATES);
   var templates = rows.map(sheetRowToTemplate);
   cache.put(APP_CONFIG.CACHE_KEYS.TEMPLATES, JSON.stringify(templates), 600);
   return templates;
@@ -14,15 +14,15 @@ function getActiveTemplates() {
   var cached = cache.get(APP_CONFIG.CACHE_KEYS.ACTIVE_TEMPLATES);
   if (cached) return JSON.parse(cached);
 
-  var templates = getTemplates().filter(function(template) {
+  var templates = getTemplates_().filter(function(template) {
     return String(template.IsActive) === 'true' || template.IsActive === true;
   });
   cache.put(APP_CONFIG.CACHE_KEYS.ACTIVE_TEMPLATES, JSON.stringify(templates), 600);
   return templates;
 }
 
-function getTemplateById(templateId) {
-  var template = getTemplates().filter(function(item) {
+function getTemplateById_(templateId) {
+  var template = getTemplates_().filter(function(item) {
     return item.TemplateID === templateId;
   })[0];
   if (!template) throw new Error('Template tidak ditemukan: ' + sanitizeInput(templateId));
@@ -31,15 +31,15 @@ function getTemplateById(templateId) {
 
 function saveTemplate(templateData, adminToken) {
   try {
-    requireAdminAccess(adminToken);
+    requireAdminAccess_(adminToken);
     validateTemplateData(templateData);
     var now = getCurrentIsoDate();
     var row = normalizeTemplateForSheet(templateData);
     row.TemplateID = row.TemplateID || generateUniqueId('TPL');
     row.CreatedAt = now;
     row.UpdatedAt = now;
-    appendSheetObject(APP_CONFIG.SHEETS.TEMPLATES, row);
-    clearApplicationCache();
+    appendSheetObject_(APP_CONFIG.SHEETS.TEMPLATES, row);
+    clearApplicationCache_();
     return createSuccessResponse(sheetRowToTemplate(row), 'Template berhasil disimpan.');
   } catch (error) {
     return createErrorResponse(error);
@@ -48,13 +48,13 @@ function saveTemplate(templateData, adminToken) {
 
 function updateTemplate(templateData, adminToken) {
   try {
-    requireAdminAccess(adminToken);
+    requireAdminAccess_(adminToken);
     validateTemplateData(templateData);
     if (!templateData.TemplateID && !templateData.id) throw new Error('Template ID wajib diisi.');
     var row = normalizeTemplateForSheet(templateData);
     row.UpdatedAt = getCurrentIsoDate();
-    updateSheetObject(APP_CONFIG.SHEETS.TEMPLATES, 'TemplateID', row.TemplateID, row);
-    clearApplicationCache();
+    updateSheetObject_(APP_CONFIG.SHEETS.TEMPLATES, 'TemplateID', row.TemplateID, row);
+    clearApplicationCache_();
     return createSuccessResponse(sheetRowToTemplate(row), 'Template berhasil diperbarui.');
   } catch (error) {
     return createErrorResponse(error);
@@ -63,9 +63,9 @@ function updateTemplate(templateData, adminToken) {
 
 function deleteTemplate(templateId, adminToken) {
   try {
-    requireAdminAccess(adminToken);
-    var deleted = deleteSheetObject(APP_CONFIG.SHEETS.TEMPLATES, 'TemplateID', templateId);
-    clearApplicationCache();
+    requireAdminAccess_(adminToken);
+    var deleted = deleteSheetObject_(APP_CONFIG.SHEETS.TEMPLATES, 'TemplateID', templateId);
+    clearApplicationCache_();
     return createSuccessResponse({ deleted: deleted }, deleted ? 'Template berhasil dihapus.' : 'Template tidak ditemukan.');
   } catch (error) {
     return createErrorResponse(error);

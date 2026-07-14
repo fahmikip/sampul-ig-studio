@@ -1,21 +1,21 @@
-function rotateAdminAccessToken() {
+function rotateAdminAccessToken_() {
   var token = Utilities.getUuid() + Utilities.getUuid().replace(/-/g, '');
   PropertiesService.getScriptProperties().setProperty('AdminAccessToken', token);
   return createSuccessResponse({ token: token }, 'Token admin baru berhasil dibuat. Simpan token ini dengan aman.');
 }
 
-function requireAdminAccess(token) {
+function requireAdminAccess_(token) {
   var expected = PropertiesService.getScriptProperties().getProperty('AdminAccessToken');
   if (!expected) {
-    throw new Error('Akses admin belum dikonfigurasi. Jalankan rotateAdminAccessToken() dari editor Apps Script.');
+    throw new Error('Akses admin belum dikonfigurasi. Jalankan rotateAdminAccessToken_() dari editor Apps Script.');
   }
-  if (!token || !constantTimeEquals(String(token), expected)) {
+  if (!token || !constantTimeEquals_(String(token), expected)) {
     throw new Error('Token admin tidak valid.');
   }
   return true;
 }
 
-function constantTimeEquals(left, right) {
+function constantTimeEquals_(left, right) {
   if (left.length !== right.length) return false;
   var difference = 0;
   for (var i = 0; i < left.length; i++) {
@@ -24,7 +24,7 @@ function constantTimeEquals(left, right) {
   return difference === 0;
 }
 
-function validatePublicSessionId(sessionId) {
+function validatePublicSessionId_(sessionId) {
   var value = String(sessionId || '');
   if (!/^[A-Za-z0-9_-]{20,100}$/.test(value)) {
     throw new Error('Sesi perangkat tidak valid. Muat ulang aplikasi.');

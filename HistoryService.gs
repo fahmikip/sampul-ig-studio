@@ -1,9 +1,9 @@
-function saveDesignHistory(data) {
+function saveDesignHistory_(data) {
   try {
     var row = {
       DesignID: data.DesignID || generateUniqueId('DSN'),
       Timestamp: data.Timestamp || getCurrentIsoDate(),
-      SessionID: validatePublicSessionId(data.SessionID || data.sessionId),
+      SessionID: validatePublicSessionId_(data.SessionID || data.sessionId),
       Title: sanitizeInput(data.Title || data.title),
       Description: sanitizeInput(data.Description || data.description || ''),
       Category: sanitizeInput(data.Category || data.category || ''),
@@ -16,7 +16,7 @@ function saveDesignHistory(data) {
       ThumbnailURL: sanitizeInput(data.ThumbnailURL || data.thumbnailUrl || ''),
       Status: sanitizeInput(data.Status || data.status || 'Saved')
     };
-    appendSheetObject(APP_CONFIG.SHEETS.HISTORY, row);
+    appendSheetObject_(APP_CONFIG.SHEETS.HISTORY, row);
     return createSuccessResponse(row, 'Riwayat desain berhasil disimpan.');
   } catch (error) {
     return createErrorResponse(error);
@@ -26,8 +26,8 @@ function saveDesignHistory(data) {
 function getDesignHistory(filters) {
   try {
     filters = filters || {};
-    var sessionId = validatePublicSessionId(filters.sessionId);
-    var rows = readSheetObjects(APP_CONFIG.SHEETS.HISTORY).reverse();
+    var sessionId = validatePublicSessionId_(filters.sessionId);
+    var rows = readSheetObjects_(APP_CONFIG.SHEETS.HISTORY).reverse();
     var query = sanitizeInput(filters.query || '').toLowerCase();
     var template = sanitizeInput(filters.template || '');
     var format = sanitizeInput(filters.format || '');
@@ -49,8 +49,8 @@ function getDesignHistory(filters) {
 
 function deleteGeneratedDesign(designId, sessionId) {
   try {
-    sessionId = validatePublicSessionId(sessionId);
-    var history = readSheetObjects(APP_CONFIG.SHEETS.HISTORY);
+    sessionId = validatePublicSessionId_(sessionId);
+    var history = readSheetObjects_(APP_CONFIG.SHEETS.HISTORY);
     var item = history.filter(function(row) {
       return row.DesignID === designId && String(row.SessionID || '') === sessionId;
     })[0];
@@ -60,7 +60,7 @@ function deleteGeneratedDesign(designId, sessionId) {
         DriveApp.getFileById(item.FileID).setTrashed(true);
       } catch (driveError) {}
     }
-    var deleted = deleteSheetObject(APP_CONFIG.SHEETS.HISTORY, 'DesignID', designId);
+    var deleted = deleteSheetObject_(APP_CONFIG.SHEETS.HISTORY, 'DesignID', designId);
     return createSuccessResponse({ deleted: deleted }, deleted ? 'Desain berhasil dihapus.' : 'Desain tidak ditemukan.');
   } catch (error) {
     return createErrorResponse(error);
@@ -69,8 +69,8 @@ function deleteGeneratedDesign(designId, sessionId) {
 
 function duplicateDesign(designId, sessionId) {
   try {
-    sessionId = validatePublicSessionId(sessionId);
-    var history = readSheetObjects(APP_CONFIG.SHEETS.HISTORY);
+    sessionId = validatePublicSessionId_(sessionId);
+    var history = readSheetObjects_(APP_CONFIG.SHEETS.HISTORY);
     var source = history.filter(function(row) {
       return row.DesignID === designId && String(row.SessionID || '') === sessionId;
     })[0];
@@ -84,7 +84,7 @@ function duplicateDesign(designId, sessionId) {
     copy.Timestamp = getCurrentIsoDate();
     copy.Title = source.Title + ' Copy';
     copy.Status = 'Duplicated';
-    appendSheetObject(APP_CONFIG.SHEETS.HISTORY, copy);
+    appendSheetObject_(APP_CONFIG.SHEETS.HISTORY, copy);
     return createSuccessResponse(copy, 'Desain berhasil diduplikat.');
   } catch (error) {
     return createErrorResponse(error);

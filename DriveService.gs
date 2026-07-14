@@ -1,8 +1,8 @@
 function uploadTemplateAsset(base64Data, fileName, mimeType, adminToken) {
   try {
-    requireAdminAccess(adminToken);
+    requireAdminAccess_(adminToken);
     validateUploadFile(base64Data, fileName, mimeType);
-    var folders = createApplicationFolders();
+    var folders = createApplicationFolders_();
     var folder = DriveApp.getFolderById(folders.AssetsFolderID);
     var bytes = parseBase64Data(base64Data);
     var blob = Utilities.newBlob(bytes, mimeType, sanitizeFileName(fileName));
@@ -23,15 +23,15 @@ function saveGeneratedImage(base64Data, fileName, mimeType, metadata) {
     validateGeneratedImage(base64Data, fileName, mimeType);
     validateDesignMetadata(metadata);
 
-    var folder = getOrCreateMonthlyFolder();
+    var folder = getOrCreateMonthlyFolder_();
     var cleanName = sanitizeFileName(fileName);
     var bytes = parseBase64Data(base64Data);
     var blob = Utilities.newBlob(bytes, mimeType, cleanName);
     var file = folder.createFile(blob);
 
-    var history = saveDesignHistory({
+    var history = saveDesignHistory_({
       Title: metadata.title,
-      SessionID: validatePublicSessionId(metadata.sessionId),
+      SessionID: validatePublicSessionId_(metadata.sessionId),
       Description: metadata.description || '',
       Category: metadata.category || '',
       TemplateID: metadata.templateId || '',
@@ -55,8 +55,9 @@ function saveGeneratedImage(base64Data, fileName, mimeType, metadata) {
   }
 }
 
-function getDriveAsset(fileId) {
+function getDriveAsset(fileId, adminToken) {
   try {
+    requireAdminAccess_(adminToken);
     if (!fileId) throw new Error('File ID wajib diisi.');
     var file = DriveApp.getFileById(fileId);
     var blob = file.getBlob();
@@ -72,15 +73,15 @@ function getDriveAsset(fileId) {
   }
 }
 
-function getOrCreateMonthlyFolder() {
-  var folders = createApplicationFolders();
+function getOrCreateMonthlyFolder_() {
+  var folders = createApplicationFolders_();
   var root = DriveApp.getFolderById(folders.GeneratedCoversFolderID);
   var parts = getCurrentYearMonthFolderName();
-  var yearFolder = getOrCreateFolder(root, parts.year);
-  return getOrCreateFolder(yearFolder, parts.month);
+  var yearFolder = getOrCreateFolder_(root, parts.year);
+  return getOrCreateFolder_(yearFolder, parts.month);
 }
 
-function getOrCreateFolder(parentFolder, folderName) {
+function getOrCreateFolder_(parentFolder, folderName) {
   var folders = parentFolder ? parentFolder.getFoldersByName(folderName) : DriveApp.getFoldersByName(folderName);
   if (folders.hasNext()) return folders.next();
   return parentFolder ? parentFolder.createFolder(folderName) : DriveApp.createFolder(folderName);

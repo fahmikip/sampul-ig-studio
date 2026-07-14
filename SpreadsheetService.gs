@@ -1,19 +1,19 @@
-function getSpreadsheet() {
+function getSpreadsheet_() {
   var spreadsheetId = PropertiesService.getScriptProperties().getProperty('SpreadsheetID');
   if (spreadsheetId) {
     return SpreadsheetApp.openById(spreadsheetId);
   }
-  return initializeSpreadsheet();
+  return initializeSpreadsheet_();
 }
 
-function getSheetByName(sheetName) {
-  var sheet = getSpreadsheet().getSheetByName(sheetName);
+function getSheetByName_(sheetName) {
+  var sheet = getSpreadsheet_().getSheetByName(sheetName);
   if (!sheet) throw new Error('Sheet tidak ditemukan: ' + sheetName);
   return sheet;
 }
 
-function ensureSheet(sheetName, headers) {
-  var spreadsheet = getSpreadsheet();
+function ensureSheet_(sheetName, headers) {
+  var spreadsheet = getSpreadsheet_();
   var sheet = spreadsheet.getSheetByName(sheetName) || spreadsheet.insertSheet(sheetName);
   if (sheet.getLastRow() === 0) {
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
@@ -22,8 +22,8 @@ function ensureSheet(sheetName, headers) {
   return sheet;
 }
 
-function ensureSheetColumns(sheetName, requiredHeaders) {
-  var sheet = getSheetByName(sheetName);
+function ensureSheetColumns_(sheetName, requiredHeaders) {
+  var sheet = getSheetByName_(sheetName);
   var lastColumn = sheet.getLastColumn();
   var headers = lastColumn ? sheet.getRange(1, 1, 1, lastColumn).getValues()[0] : [];
   requiredHeaders.forEach(function(header) {
@@ -35,8 +35,8 @@ function ensureSheetColumns(sheetName, requiredHeaders) {
   return sheet;
 }
 
-function readSheetObjects(sheetName) {
-  var sheet = getSheetByName(sheetName);
+function readSheetObjects_(sheetName) {
+  var sheet = getSheetByName_(sheetName);
   var values = sheet.getDataRange().getValues();
   if (values.length < 2) return [];
   var headers = values[0];
@@ -51,14 +51,14 @@ function readSheetObjects(sheetName) {
   });
 }
 
-function appendSheetObject(sheetName, data) {
+function appendSheetObject_(sheetName, data) {
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
-    var sheet = getSheetByName(sheetName);
+    var sheet = getSheetByName_(sheetName);
     var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
     var row = headers.map(function(header) {
-      return data[header] !== undefined ? escapeSpreadsheetFormula(data[header]) : '';
+      return data[header] !== undefined ? escapeSpreadsheetFormula_(data[header]) : '';
     });
     sheet.appendRow(row);
     return data;
@@ -67,11 +67,11 @@ function appendSheetObject(sheetName, data) {
   }
 }
 
-function updateSheetObject(sheetName, keyColumn, keyValue, data) {
+function updateSheetObject_(sheetName, keyColumn, keyValue, data) {
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
-    var sheet = getSheetByName(sheetName);
+    var sheet = getSheetByName_(sheetName);
     var values = sheet.getDataRange().getValues();
     var headers = values[0];
     var keyIndex = headers.indexOf(keyColumn);
@@ -80,7 +80,7 @@ function updateSheetObject(sheetName, keyColumn, keyValue, data) {
     for (var i = 1; i < values.length; i++) {
       if (String(values[i][keyIndex]) === String(keyValue)) {
         var row = headers.map(function(header, index) {
-          return data[header] !== undefined ? escapeSpreadsheetFormula(data[header]) : values[i][index];
+          return data[header] !== undefined ? escapeSpreadsheetFormula_(data[header]) : values[i][index];
         });
         sheet.getRange(i + 1, 1, 1, headers.length).setValues([row]);
         return data;
@@ -92,11 +92,11 @@ function updateSheetObject(sheetName, keyColumn, keyValue, data) {
   }
 }
 
-function deleteSheetObject(sheetName, keyColumn, keyValue) {
+function deleteSheetObject_(sheetName, keyColumn, keyValue) {
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
-    var sheet = getSheetByName(sheetName);
+    var sheet = getSheetByName_(sheetName);
     var values = sheet.getDataRange().getValues();
     var headers = values[0];
     var keyIndex = headers.indexOf(keyColumn);
