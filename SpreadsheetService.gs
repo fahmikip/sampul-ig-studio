@@ -22,6 +22,19 @@ function ensureSheet(sheetName, headers) {
   return sheet;
 }
 
+function ensureSheetColumns(sheetName, requiredHeaders) {
+  var sheet = getSheetByName(sheetName);
+  var lastColumn = sheet.getLastColumn();
+  var headers = lastColumn ? sheet.getRange(1, 1, 1, lastColumn).getValues()[0] : [];
+  requiredHeaders.forEach(function(header) {
+    if (headers.indexOf(header) === -1) {
+      headers.push(header);
+      sheet.getRange(1, headers.length).setValue(header);
+    }
+  });
+  return sheet;
+}
+
 function readSheetObjects(sheetName) {
   var sheet = getSheetByName(sheetName);
   var values = sheet.getDataRange().getValues();

@@ -24,8 +24,9 @@ function getPublicSettings(settings) {
   };
 }
 
-function saveAppSettings(settings) {
+function saveAppSettings(settings, adminToken) {
   try {
+    requireAdminAccess(adminToken);
     Object.keys(settings || {}).forEach(function(key) {
       setSetting(key, settings[key], 'Diperbarui dari halaman pengaturan.');
     });

@@ -3,6 +3,7 @@ function saveDesignHistory(data) {
     var row = {
       DesignID: data.DesignID || generateUniqueId('DSN'),
       Timestamp: data.Timestamp || getCurrentIsoDate(),
+      SessionID: validatePublicSessionId(data.SessionID || data.sessionId),
       Title: sanitizeInput(data.Title || data.title),
       Description: sanitizeInput(data.Description || data.description || ''),
       Category: sanitizeInput(data.Category || data.category || ''),
@@ -25,6 +26,7 @@ function saveDesignHistory(data) {
 function getDesignHistory(filters) {
   try {
     filters = filters || {};
+    var sessionId = validatePublicSessionId(filters.sessionId);
     var rows = readSheetObjects(APP_CONFIG.SHEETS.HISTORY).reverse();
     var query = sanitizeInput(filters.query || '').toLowerCase();
     var template = sanitizeInput(filters.template || '');
@@ -32,6 +34,7 @@ function getDesignHistory(filters) {
     var date = sanitizeInput(filters.date || '');
 
     var filtered = rows.filter(function(row) {
+      if (String(row.SessionID || '') !== sessionId) return false;
       var matchesQuery = !query || String(row.Title + ' ' + row.Description).toLowerCase().indexOf(query) > -1;
       var matchesTemplate = !template || row.TemplateID === template || row.TemplateName === template;
       var matchesFormat = !format || row.Format === format;
@@ -44,12 +47,14 @@ function getDesignHistory(filters) {
   }
 }
 
-function deleteGeneratedDesign(designId) {
+function deleteGeneratedDesign(designId, sessionId) {
   try {
+    sessionId = validatePublicSessionId(sessionId);
     var history = readSheetObjects(APP_CONFIG.SHEETS.HISTORY);
     var item = history.filter(function(row) {
-      return row.DesignID === designId;
+      return row.DesignID === designId && String(row.SessionID || '') === sessionId;
     })[0];
+    if (!item) throw new Error('Desain tidak ditemukan atau bukan milik sesi ini.');
     if (item && item.FileID) {
       try {
         DriveApp.getFileById(item.FileID).setTrashed(true);
@@ -62,11 +67,12 @@ function deleteGeneratedDesign(designId) {
   }
 }
 
-function duplicateDesign(designId) {
+function duplicateDesign(designId, sessionId) {
   try {
+    sessionId = validatePublicSessionId(sessionId);
     var history = readSheetObjects(APP_CONFIG.SHEETS.HISTORY);
     var source = history.filter(function(row) {
-      return row.DesignID === designId;
+      return row.DesignID === designId && String(row.SessionID || '') === sessionId;
     })[0];
     if (!source) throw new Error('Desain tidak ditemukan.');
 

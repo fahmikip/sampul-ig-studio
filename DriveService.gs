@@ -1,5 +1,6 @@
-function uploadTemplateAsset(base64Data, fileName, mimeType) {
+function uploadTemplateAsset(base64Data, fileName, mimeType, adminToken) {
   try {
+    requireAdminAccess(adminToken);
     validateUploadFile(base64Data, fileName, mimeType);
     var folders = createApplicationFolders();
     var folder = DriveApp.getFolderById(folders.AssetsFolderID);
@@ -30,6 +31,7 @@ function saveGeneratedImage(base64Data, fileName, mimeType, metadata) {
 
     var history = saveDesignHistory({
       Title: metadata.title,
+      SessionID: validatePublicSessionId(metadata.sessionId),
       Description: metadata.description || '',
       Category: metadata.category || '',
       TemplateID: metadata.templateId || '',

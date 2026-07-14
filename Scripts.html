@@ -2,8 +2,22 @@
 const App = {
   data: readInitialData(),
   state: null,
-  renderTimer: null
+  renderTimer: null,
+  sessionId: getOrCreateSessionId(),
+  adminToken: ''
 };
+
+function getOrCreateSessionId() {
+  const storageKey = 'sampulIgStudioSessionId';
+  let value = window.localStorage.getItem(storageKey);
+  if (!/^[A-Za-z0-9_-]{20,100}$/.test(value || '')) {
+    value = window.crypto && window.crypto.randomUUID
+      ? window.crypto.randomUUID().replace(/-/g, '')
+      : `${Date.now()}_${Math.random().toString(36).slice(2)}_${Math.random().toString(36).slice(2)}`;
+    window.localStorage.setItem(storageKey, value);
+  }
+  return value;
+}
 
 document.addEventListener('DOMContentLoaded', initApp);
 
@@ -423,6 +437,7 @@ function saveToDrive() {
     templateId: App.state.template.TemplateID,
     templateName: App.state.template.TemplateName,
     format: App.state.format.name
+    ,sessionId: App.sessionId
   };
   showToast('Menyimpan ke Google Drive...');
   google.script.run
@@ -435,6 +450,9 @@ function saveToDrive() {
 }
 
 function openAdmin() {
+  const token = window.prompt('Masukkan token admin:');
+  if (!token) return;
+  App.adminToken = token;
   const t = App.state.template;
   document.getElementById('adminTemplateName').value = t.TemplateName;
   document.getElementById('adminCategory').value = t.Category;
@@ -473,7 +491,7 @@ function saveAdminTemplate() {
       showToast('Template diperbarui.', 'success');
     })
     .withFailureHandler((error) => showToast(error.message, 'error'))
-    .updateTemplate(t);
+    .updateTemplate(t, App.adminToken);
 }
 
 function duplicateActiveTemplate() {
@@ -491,7 +509,7 @@ function duplicateActiveTemplate() {
       showToast('Template diduplikat.', 'success');
     })
     .withFailureHandler((error) => showToast(error.message, 'error'))
-    .saveTemplate(copy);
+    .saveTemplate(copy, App.adminToken);
 }
 
 function deleteActiveTemplate() {
@@ -508,7 +526,7 @@ function deleteActiveTemplate() {
       showToast('Template dihapus.', 'success');
     })
     .withFailureHandler((error) => showToast(error.message, 'error'))
-    .deleteTemplate(id);
+    .deleteTemplate(id, App.adminToken);
 }
 
 function openHistory() {
@@ -519,7 +537,8 @@ function openHistory() {
 function loadHistory() {
   const filters = {
     query: document.getElementById('historySearch').value,
-    format: document.getElementById('historyFormat').value
+    format: document.getElementById('historyFormat').value,
+    sessionId: App.sessionId
   };
   google.script.run
     .withSuccessHandler((response) => {
@@ -548,7 +567,7 @@ function deleteHistoryItem(designId) {
       }
     })
     .withFailureHandler((error) => showToast(error.message, 'error'))
-    .deleteGeneratedDesign(designId);
+    .deleteGeneratedDesign(designId, App.sessionId);
 }
 
 function safeText(value) {

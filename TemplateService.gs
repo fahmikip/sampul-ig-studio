@@ -29,8 +29,9 @@ function getTemplateById(templateId) {
   return template;
 }
 
-function saveTemplate(templateData) {
+function saveTemplate(templateData, adminToken) {
   try {
+    requireAdminAccess(adminToken);
     validateTemplateData(templateData);
     var now = getCurrentIsoDate();
     var row = normalizeTemplateForSheet(templateData);
@@ -45,8 +46,9 @@ function saveTemplate(templateData) {
   }
 }
 
-function updateTemplate(templateData) {
+function updateTemplate(templateData, adminToken) {
   try {
+    requireAdminAccess(adminToken);
     validateTemplateData(templateData);
     if (!templateData.TemplateID && !templateData.id) throw new Error('Template ID wajib diisi.');
     var row = normalizeTemplateForSheet(templateData);
@@ -59,8 +61,9 @@ function updateTemplate(templateData) {
   }
 }
 
-function deleteTemplate(templateId) {
+function deleteTemplate(templateId, adminToken) {
   try {
+    requireAdminAccess(adminToken);
     var deleted = deleteSheetObject(APP_CONFIG.SHEETS.TEMPLATES, 'TemplateID', templateId);
     clearApplicationCache();
     return createSuccessResponse({ deleted: deleted }, deleted ? 'Template berhasil dihapus.' : 'Template tidak ditemukan.');

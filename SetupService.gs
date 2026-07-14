@@ -29,6 +29,7 @@ function initializeSpreadsheet() {
   ensureSheet(APP_CONFIG.SHEETS.TEMPLATES, getTemplateHeaders());
   ensureSheet(APP_CONFIG.SHEETS.HISTORY, getHistoryHeaders());
   ensureSheet(APP_CONFIG.SHEETS.SETTINGS, getSettingsHeaders());
+  ensureSheetColumns(APP_CONFIG.SHEETS.HISTORY, getHistoryHeaders());
   return spreadsheet;
 }
 
@@ -84,7 +85,7 @@ function getTemplateHeaders() {
 }
 
 function getHistoryHeaders() {
-  return ['DesignID', 'Timestamp', 'Title', 'Description', 'Category', 'TemplateID', 'TemplateName', 'Format', 'FileName', 'FileID', 'FileURL', 'ThumbnailURL', 'Status'];
+  return ['DesignID', 'Timestamp', 'SessionID', 'Title', 'Description', 'Category', 'TemplateID', 'TemplateName', 'Format', 'FileName', 'FileID', 'FileURL', 'ThumbnailURL', 'Status'];
 }
 
 function getSettingsHeaders() {

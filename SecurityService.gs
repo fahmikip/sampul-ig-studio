@@ -1,0 +1,33 @@
+function rotateAdminAccessToken() {
+  var token = Utilities.getUuid() + Utilities.getUuid().replace(/-/g, '');
+  PropertiesService.getScriptProperties().setProperty('AdminAccessToken', token);
+  return createSuccessResponse({ token: token }, 'Token admin baru berhasil dibuat. Simpan token ini dengan aman.');
+}
+
+function requireAdminAccess(token) {
+  var expected = PropertiesService.getScriptProperties().getProperty('AdminAccessToken');
+  if (!expected) {
+    throw new Error('Akses admin belum dikonfigurasi. Jalankan rotateAdminAccessToken() dari editor Apps Script.');
+  }
+  if (!token || !constantTimeEquals(String(token), expected)) {
+    throw new Error('Token admin tidak valid.');
+  }
+  return true;
+}
+
+function constantTimeEquals(left, right) {
+  if (left.length !== right.length) return false;
+  var difference = 0;
+  for (var i = 0; i < left.length; i++) {
+    difference |= left.charCodeAt(i) ^ right.charCodeAt(i);
+  }
+  return difference === 0;
+}
+
+function validatePublicSessionId(sessionId) {
+  var value = String(sessionId || '');
+  if (!/^[A-Za-z0-9_-]{20,100}$/.test(value)) {
+    throw new Error('Sesi perangkat tidak valid. Muat ulang aplikasi.');
+  }
+  return value;
+}
