@@ -112,3 +112,17 @@ function jsonStringify(value) {
   return JSON.stringify(value === undefined ? null : value);
 }
 
+function serializeJsonForHtml(value) {
+  return jsonStringify(value)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
+}
+
+function escapeSpreadsheetFormula(value) {
+  if (typeof value !== 'string') return value;
+  return /^[=+\-@]/.test(value) ? "'" + value : value;
+}
+

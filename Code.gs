@@ -2,16 +2,14 @@ function doGet(e) {
   try {
     ensureApplicationReady();
     var template = HtmlService.createTemplateFromFile('Index');
-    template.initialData = JSON.stringify(getInitialAppData());
+    template.initialData = serializeJsonForHtml(getInitialAppData());
 
     return template.evaluate()
       .setTitle('Sampul IG Studio')
-      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
       .addMetaTag('viewport', 'width=device-width, initial-scale=1');
   } catch (error) {
     return HtmlService.createHtmlOutput(buildFallbackHtml(error))
-      .setTitle('Sampul IG Studio')
-      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+      .setTitle('Sampul IG Studio');
   }
 }
 

@@ -21,20 +21,16 @@ function validateTemplateData(templateData) {
 }
 
 function validateGeneratedImage(base64Data, fileName, mimeType) {
-  validateBase64Image(base64Data);
   validateMimeType(mimeType, ['image/png', 'image/jpeg']);
+  validateBase64Image(base64Data, APP_CONFIG.MAX_UPLOAD_SIZE, mimeType);
   if (!sanitizeInput(fileName)) throw new Error('Nama file wajib diisi.');
   return true;
 }
 
 function validateUploadFile(base64Data, fileName, mimeType) {
-  validateBase64Image(base64Data);
   validateMimeType(mimeType, APP_CONFIG.ALLOWED_IMAGE_TYPES);
+  validateBase64Image(base64Data, APP_CONFIG.MAX_UPLOAD_SIZE, mimeType);
   if (!sanitizeInput(fileName)) throw new Error('Nama file wajib diisi.');
-  var estimatedBytes = Math.ceil((base64Data.length * 3) / 4);
-  if (estimatedBytes > APP_CONFIG.MAX_UPLOAD_SIZE * 1.38) {
-    throw new Error('Ukuran file melebihi batas 10 MB.');
-  }
   return true;
 }
 
@@ -48,12 +44,23 @@ function validateDesignMetadata(metadata) {
   return true;
 }
 
-function validateBase64Image(base64Data) {
+function validateBase64Image(base64Data, maxBytes, expectedMimeType) {
   if (!base64Data || typeof base64Data !== 'string') {
     throw new Error('Data gambar tidak valid.');
   }
-  if (base64Data.indexOf('base64,') === -1 && !/^[A-Za-z0-9+/=]+$/.test(base64Data)) {
+  var match = base64Data.match(/^data:([^;,]+);base64,([A-Za-z0-9+/]+={0,2})$/);
+  var payload = match ? match[2] : base64Data;
+  if (!match && !/^[A-Za-z0-9+/]+={0,2}$/.test(payload)) {
     throw new Error('Format base64 gambar tidak valid.');
+  }
+  if (match && expectedMimeType && match[1] !== expectedMimeType) {
+    throw new Error('Tipe data gambar tidak sesuai dengan MIME type.');
+  }
+  if (payload.length % 4 !== 0) throw new Error('Panjang data base64 tidak valid.');
+  var padding = payload.slice(-2) === '==' ? 2 : (payload.slice(-1) === '=' ? 1 : 0);
+  var estimatedBytes = (payload.length * 3 / 4) - padding;
+  if (maxBytes && estimatedBytes > maxBytes) {
+    throw new Error('Ukuran file melebihi batas ' + Math.floor(maxBytes / 1048576) + ' MB.');
   }
   return true;
 }

@@ -58,7 +58,7 @@ function appendSheetObject(sheetName, data) {
     var sheet = getSheetByName(sheetName);
     var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
     var row = headers.map(function(header) {
-      return data[header] !== undefined ? data[header] : '';
+      return data[header] !== undefined ? escapeSpreadsheetFormula(data[header]) : '';
     });
     sheet.appendRow(row);
     return data;
@@ -80,7 +80,7 @@ function updateSheetObject(sheetName, keyColumn, keyValue, data) {
     for (var i = 1; i < values.length; i++) {
       if (String(values[i][keyIndex]) === String(keyValue)) {
         var row = headers.map(function(header, index) {
-          return data[header] !== undefined ? data[header] : values[i][index];
+          return data[header] !== undefined ? escapeSpreadsheetFormula(data[header]) : values[i][index];
         });
         sheet.getRange(i + 1, 1, 1, headers.length).setValues([row]);
         return data;
