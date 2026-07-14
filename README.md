@@ -9,7 +9,7 @@ Sampul IG Studio adalah aplikasi Google Apps Script Web App untuk membuat sampul
   - Feed Square 1080 x 1080
   - Story 1080 x 1920
   - Reels Cover 1080 x 1920
-- 15 template awal dalam 5 kategori.
+- 24 template awal dalam 7 kategori.
 - Live preview berbasis HTML Canvas.
 - Auto typography: wrapping, resize, max line, dan proteksi area aman.
 - Upload foto JPG, PNG, dan WEBP.
@@ -19,6 +19,16 @@ Sampul IG Studio adalah aplikasi Google Apps Script Web App untuk membuat sampul
 - Simpan hasil ke Google Drive.
 - Riwayat desain berbasis Google Spreadsheet.
 - Template Manager sederhana.
+
+## Kategori Template
+
+- Cinematic Dark
+- Editorial Beige
+- Modern Gradient
+- Minimal Education
+- Photo Focus
+- Professional Modern
+- Kemerdekaan 17 Agustus
 
 ## Teknologi
 

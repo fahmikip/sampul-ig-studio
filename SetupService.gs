@@ -58,8 +58,20 @@ function initializeDefaultSettings() {
 function initializeDefaultTemplates() {
   initializeSpreadsheet();
   var existing = readSheetObjects(APP_CONFIG.SHEETS.TEMPLATES);
-  if (existing.length > 0) return existing;
   var templates = getDefaultTemplates();
+  if (existing.length > 0) {
+    var existingIds = existing.map(function(row) {
+      return row.TemplateID;
+    });
+    var missingTemplates = templates.filter(function(template) {
+      return existingIds.indexOf(template.TemplateID) === -1;
+    });
+    missingTemplates.forEach(function(template) {
+      appendSheetObject(APP_CONFIG.SHEETS.TEMPLATES, templateToSheetRow(template));
+    });
+    CacheService.getScriptCache().removeAll([APP_CONFIG.CACHE_KEYS.TEMPLATES, APP_CONFIG.CACHE_KEYS.ACTIVE_TEMPLATES]);
+    return existing.concat(missingTemplates);
+  }
   templates.forEach(function(template) {
     appendSheetObject(APP_CONFIG.SHEETS.TEMPLATES, templateToSheetRow(template));
   });
@@ -96,7 +108,16 @@ function getDefaultTemplates() {
     ['tpl-simple-listicle', 'Simple Listicle', 'Minimal Education', '#FAFAFA', '#111111', 'list', 78],
     ['tpl-full-photo-title', 'Full Photo Title', 'Photo Focus', '#0F0F0F', '#E53935', 'photo-full', 96],
     ['tpl-split-image', 'Split Image', 'Photo Focus', '#121212', '#F59E0B', 'split', 90],
-    ['tpl-bottom-gradient-story', 'Bottom Gradient Story', 'Photo Focus', '#101010', '#22C55E', 'bottom-gradient', 92]
+    ['tpl-bottom-gradient-story', 'Bottom Gradient Story', 'Photo Focus', '#101010', '#22C55E', 'bottom-gradient', 92],
+    ['tpl-executive-slate', 'Executive Slate', 'Professional Modern', '#0B1220', '#14B8A6', 'executive-grid', 88, '#F8FAFC', '#CBD5E1', 0.2, 'Inter'],
+    ['tpl-luxury-carbon', 'Luxury Carbon', 'Professional Modern', '#111827', '#D4AF37', 'premium-split', 92, '#FFFFFF', '#D1D5DB', 0.24, 'Oswald'],
+    ['tpl-aurora-report', 'Aurora Report', 'Professional Modern', '#111D3A', '#8B5CF6', 'aurora', 86, '#F8FAFC', '#DDD6FE', 0.22, 'Poppins'],
+    ['tpl-studio-glass', 'Studio Glass', 'Professional Modern', '#0E1726', '#38BDF8', 'glass-panel', 90, '#F8FAFC', '#BAE6FD', 0.18, 'Inter'],
+    ['tpl-focus-rings', 'Focus Rings', 'Professional Modern', '#101828', '#F97316', 'focus-rings', 88, '#FFFFFF', '#FED7AA', 0.2, 'Poppins'],
+    ['tpl-signal-lines', 'Signal Lines', 'Professional Modern', '#08111F', '#22C55E', 'signal-lines', 84, '#ECFDF5', '#BBF7D0', 0.16, 'Inter'],
+    ['tpl-merdeka-proklamasi', 'Merdeka Proklamasi', 'Kemerdekaan 17 Agustus', '#B91C1C', '#FFFFFF', 'merdeka-ribbon', 92, '#FFFFFF', '#FEE2E2', 0.18, 'Oswald'],
+    ['tpl-merah-putih-modern', 'Merah Putih Modern', 'Kemerdekaan 17 Agustus', '#FAFAFA', '#DC2626', 'red-white-modern', 88, '#111827', '#4B5563', 0.08, 'Poppins'],
+    ['tpl-nusantara-bold', 'Nusantara Bold', 'Kemerdekaan 17 Agustus', '#7F1D1D', '#FACC15', 'nusantara-bold', 96, '#FFF7ED', '#FED7AA', 0.2, 'Oswald']
   ];
 
   return specs.map(function(spec, index) {
@@ -108,13 +129,13 @@ function getDefaultTemplates() {
       BackgroundType: spec[5].indexOf('gradient') > -1 ? 'gradient' : 'color',
       BackgroundValue: spec[3],
       BackgroundImageID: '',
-      FontTitle: index < 3 ? 'Oswald' : 'Poppins',
+      FontTitle: spec[11] || (index < 3 ? 'Oswald' : 'Poppins'),
       FontDescription: 'Inter',
-      TitleColor: spec[2] === 'Minimal Education' || spec[2] === 'Editorial Beige' ? '#171717' : '#F8F8F8',
-      DescriptionColor: spec[2] === 'Minimal Education' || spec[2] === 'Editorial Beige' ? '#57534E' : '#D4D4D4',
+      TitleColor: spec[8] || (spec[2] === 'Minimal Education' || spec[2] === 'Editorial Beige' ? '#171717' : '#F8F8F8'),
+      DescriptionColor: spec[9] || (spec[2] === 'Minimal Education' || spec[2] === 'Editorial Beige' ? '#57534E' : '#D4D4D4'),
       AccentColor: spec[4],
       OverlayColor: '#000000',
-      OverlayOpacity: spec[2] === 'Photo Focus' ? 0.42 : 0.18,
+      OverlayOpacity: spec[10] !== undefined ? spec[10] : (spec[2] === 'Photo Focus' ? 0.42 : 0.18),
       TitlePosition: jsonStringify({ x: 88, y: 470, width: 904, anchor: 'left' }),
       DescriptionPosition: jsonStringify({ x: 88, y: 735, width: 820, anchor: 'left' }),
       LabelPosition: jsonStringify({ x: 88, y: 150, width: 560, anchor: 'left' }),
@@ -135,4 +156,3 @@ function getDefaultTemplates() {
 function templateToSheetRow(template) {
   return template;
 }
-
