@@ -14,6 +14,21 @@
   </div>
 </div>
 
+<div class="modal-backdrop" id="mobileDownloadModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Simpan Gambar</h2>
+      <button class="icon-button" data-close-modal="mobileDownloadModal" type="button">Tutup</button>
+    </div>
+    <p class="helper-text">Tekan dan tahan gambar di bawah ini, lalu pilih simpan gambar. Jika browser menampilkan tombol bagikan, gunakan menu tersebut untuk menyimpan ke galeri.</p>
+    <img alt="Hasil sampul Instagram" class="download-preview" id="mobileDownloadImage">
+    <div class="button-row">
+      <button class="secondary-button" id="openImageTabBtn" type="button">Buka di tab baru</button>
+      <button class="ghost-button" data-close-modal="mobileDownloadModal" type="button">Selesai</button>
+    </div>
+  </div>
+</div>
+
 <script>
 function showToast(message, type) {
   const host = document.getElementById('toastHost');
@@ -60,4 +75,3 @@ function createHistoryCard(item) {
   return card;
 }
 </script>
-

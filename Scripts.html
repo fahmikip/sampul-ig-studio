@@ -166,6 +166,7 @@ function bindEvents() {
   document.getElementById('downloadPngBtn').addEventListener('click', () => downloadImage('png'));
   document.getElementById('downloadPngTopBtn').addEventListener('click', () => downloadImage('png'));
   document.getElementById('downloadJpgBtn').addEventListener('click', () => downloadImage('jpg'));
+  document.getElementById('openImageTabBtn').addEventListener('click', openMobileDownloadImage);
   document.getElementById('saveDriveBtn').addEventListener('click', saveToDrive);
   document.getElementById('adminOpenBtn').addEventListener('click', openAdmin);
   document.getElementById('historyOpenBtn').addEventListener('click', openHistory);
@@ -369,11 +370,43 @@ function downloadImage(type) {
   const fileName = `sampul-ig-${title}-${date}.${type === 'jpg' ? 'jpg' : 'png'}`;
   const mime = type === 'jpg' ? 'image/jpeg' : 'image/png';
   const quality = Number(document.getElementById('jpgQuality').value || 0.95);
+  const dataUrl = type === 'jpg' ? canvas.toDataURL(mime, quality) : canvas.toDataURL(mime);
+
+  if (isMobileBrowser()) {
+    showMobileDownloadSheet(dataUrl, fileName);
+    return;
+  }
+
   const link = document.createElement('a');
   link.download = fileName;
-  link.href = type === 'jpg' ? canvas.toDataURL(mime, quality) : canvas.toDataURL(mime);
+  link.href = dataUrl;
+  document.body.appendChild(link);
   link.click();
+  link.remove();
   showToast('File mulai diunduh.', 'success');
+}
+
+function showMobileDownloadSheet(dataUrl, fileName) {
+  const image = document.getElementById('mobileDownloadImage');
+  image.src = dataUrl;
+  image.dataset.fileName = fileName;
+  openModal('mobileDownloadModal');
+  showToast('Preview export siap. Tekan dan tahan gambar untuk menyimpan.', 'success');
+}
+
+function openMobileDownloadImage() {
+  const image = document.getElementById('mobileDownloadImage');
+  if (!image || !image.src) return;
+  const opened = window.open(image.src, '_blank');
+  if (!opened) {
+    showToast('Browser memblokir tab baru. Tekan dan tahan gambar untuk menyimpan.', 'error');
+  }
+}
+
+function isMobileBrowser() {
+  const userAgent = navigator.userAgent || navigator.vendor || '';
+  const touchDevice = navigator.maxTouchPoints && navigator.maxTouchPoints > 1;
+  return /Android|iPhone|iPad|iPod|Mobile|IEMobile|Opera Mini/i.test(userAgent) || (touchDevice && window.innerWidth <= 960);
 }
 
 function saveToDrive() {
