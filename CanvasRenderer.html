@@ -61,7 +61,7 @@ const CanvasRenderer = (() => {
   }
 
   function drawPhotoWithDownsampleBlur(ctx, canvas, img, x, y, width, height, blur, colorFilter) {
-    const scale = Math.max(0.18, 1 / (1 + blur * 0.24));
+    const scale = Math.max(0.42, 1 / (1 + blur * 0.12));
     const buffer = document.createElement('canvas');
     buffer.width = Math.max(1, Math.round(canvas.width * scale));
     buffer.height = Math.max(1, Math.round(canvas.height * scale));
@@ -71,10 +71,19 @@ const CanvasRenderer = (() => {
     bufferCtx.filter = colorFilter;
     bufferCtx.drawImage(img, x * scale, y * scale, width * scale, height * scale);
 
+    const intermediateScale = Math.sqrt(scale);
+    const intermediate = document.createElement('canvas');
+    intermediate.width = Math.max(buffer.width, Math.round(canvas.width * intermediateScale));
+    intermediate.height = Math.max(buffer.height, Math.round(canvas.height * intermediateScale));
+    const intermediateCtx = intermediate.getContext('2d');
+    intermediateCtx.imageSmoothingEnabled = true;
+    intermediateCtx.imageSmoothingQuality = 'high';
+    intermediateCtx.drawImage(buffer, 0, 0, buffer.width, buffer.height, 0, 0, intermediate.width, intermediate.height);
+
     ctx.save();
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(buffer, 0, 0, buffer.width, buffer.height, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(intermediate, 0, 0, intermediate.width, intermediate.height, 0, 0, canvas.width, canvas.height);
     ctx.restore();
   }
 
