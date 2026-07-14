@@ -12,6 +12,10 @@ function rotateAdminAccessToken() {
   return rotateAdminAccessToken_();
 }
 
+function showNewAdminToken() {
+  console.log(JSON.stringify(rotateAdminAccessToken()));
+}
+
 function rotateAdminAccessToken_() {
   var token = Utilities.getUuid() + Utilities.getUuid().replace(/-/g, '');
   PropertiesService.getScriptProperties().setProperty('AdminAccessToken', token);
