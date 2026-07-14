@@ -117,7 +117,9 @@ function getDefaultTemplates() {
     ['tpl-signal-lines', 'Signal Lines', 'Professional Modern', '#08111F', '#22C55E', 'signal-lines', 84, '#ECFDF5', '#BBF7D0', 0.16, 'Inter'],
     ['tpl-merdeka-proklamasi', 'Merdeka Proklamasi', 'Kemerdekaan 17 Agustus', '#B91C1C', '#FFFFFF', 'merdeka-ribbon', 92, '#FFFFFF', '#FEE2E2', 0.18, 'Oswald'],
     ['tpl-merah-putih-modern', 'Merah Putih Modern', 'Kemerdekaan 17 Agustus', '#FAFAFA', '#DC2626', 'red-white-modern', 88, '#111827', '#4B5563', 0.08, 'Poppins'],
-    ['tpl-nusantara-bold', 'Nusantara Bold', 'Kemerdekaan 17 Agustus', '#7F1D1D', '#FACC15', 'nusantara-bold', 96, '#FFF7ED', '#FED7AA', 0.2, 'Oswald']
+    ['tpl-nusantara-bold', 'Nusantara Bold', 'Kemerdekaan 17 Agustus', '#7F1D1D', '#FACC15', 'nusantara-bold', 96, '#FFF7ED', '#FED7AA', 0.2, 'Oswald'],
+    ['tpl-garuda-merdeka-1994', 'Garuda Merdeka 1994', 'Kemerdekaan 17 Agustus', '#A11218', '#F8FAFC', 'garuda-emblem', 90, '#FFFFFF', '#FEE2E2', 0.14, 'Oswald'],
+    ['tpl-garuda-putih-hero', 'Garuda Putih Hero', 'Kemerdekaan 17 Agustus', '#F8F8F8', '#B91C1C', 'garuda-white-hero', 86, '#991B1B', '#4B5563', 0.06, 'Poppins']
   ];
 
   return specs.map(function(spec, index) {
