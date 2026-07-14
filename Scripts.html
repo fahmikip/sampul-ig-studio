@@ -185,6 +185,7 @@ function bindEvents() {
   document.getElementById('downloadPngBtn').addEventListener('click', () => downloadImage('png'));
   document.getElementById('downloadPngTopBtn').addEventListener('click', () => downloadImage('png'));
   document.getElementById('downloadJpgBtn').addEventListener('click', () => downloadImage('jpg'));
+  document.getElementById('shareImageBtn').addEventListener('click', shareMobilePreview);
   document.getElementById('openImageTabBtn').addEventListener('click', openMobileDownloadImage);
   document.getElementById('saveDriveBtn').addEventListener('click', saveToDrive);
   document.getElementById('adminOpenBtn').addEventListener('click', openAdmin);
@@ -392,6 +393,7 @@ function downloadImage(type) {
   const dataUrl = type === 'jpg' ? canvas.toDataURL(mime, quality) : canvas.toDataURL(mime);
 
   if (isMobileBrowser()) {
+    if (shareImageFile(dataUrl, fileName, mime)) return;
     showMobileDownloadSheet(dataUrl, fileName);
     return;
   }
@@ -573,6 +575,46 @@ function deleteHistoryItem(designId) {
     })
     .withFailureHandler((error) => showToast(error.message, 'error'))
     .deleteGeneratedDesign(designId, App.sessionId);
+}
+
+function shareImageFile(dataUrl, fileName, mime) {
+  if (!navigator.share || typeof File === 'undefined') return false;
+  try {
+    const file = dataUrlToFile(dataUrl, fileName, mime);
+    if (navigator.canShare && !navigator.canShare({ files: [file] })) return false;
+    navigator.share({
+      files: [file],
+      title: 'Sampul Instagram'
+    }).catch((error) => {
+      if (error && error.name !== 'AbortError') {
+        showMobileDownloadSheet(dataUrl, fileName);
+        showToast('Menu simpan tidak tersedia. Gunakan preview gambar.', 'error');
+      }
+    });
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+function dataUrlToFile(dataUrl, fileName, fallbackMime) {
+  const parts = dataUrl.split(',');
+  const mimeMatch = parts[0].match(/^data:([^;]+);base64$/);
+  const mime = mimeMatch ? mimeMatch[1] : fallbackMime;
+  const binary = window.atob(parts[1]);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return new File([bytes], fileName, { type: mime });
+}
+
+function shareMobilePreview() {
+  const image = document.getElementById('mobileDownloadImage');
+  if (!image || !image.src) return;
+  const fileName = image.dataset.fileName || 'sampul-instagram.png';
+  const mime = fileName.toLowerCase().endsWith('.jpg') ? 'image/jpeg' : 'image/png';
+  if (!shareImageFile(image.src, fileName, mime)) {
+    showToast('Browser ini belum mendukung simpan langsung. Tekan dan tahan gambar.', 'error');
+  }
 }
 
 function safeText(value) {
