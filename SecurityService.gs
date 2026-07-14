@@ -1,3 +1,17 @@
+function requireOwnerExecution_() {
+  var activeEmail = Session.getActiveUser().getEmail();
+  var ownerEmail = Session.getEffectiveUser().getEmail();
+  if (!activeEmail || !ownerEmail || activeEmail.toLowerCase() !== ownerEmail.toLowerCase()) {
+    throw new Error('Fungsi ini hanya dapat dijalankan oleh pemilik proyek dari editor Apps Script.');
+  }
+  return true;
+}
+
+function rotateAdminAccessToken() {
+  requireOwnerExecution_();
+  return rotateAdminAccessToken_();
+}
+
 function rotateAdminAccessToken_() {
   var token = Utilities.getUuid() + Utilities.getUuid().replace(/-/g, '');
   PropertiesService.getScriptProperties().setProperty('AdminAccessToken', token);
@@ -7,7 +21,7 @@ function rotateAdminAccessToken_() {
 function requireAdminAccess_(token) {
   var expected = PropertiesService.getScriptProperties().getProperty('AdminAccessToken');
   if (!expected) {
-    throw new Error('Akses admin belum dikonfigurasi. Jalankan rotateAdminAccessToken_() dari editor Apps Script.');
+    throw new Error('Akses admin belum dikonfigurasi. Jalankan rotateAdminAccessToken() dari editor Apps Script.');
   }
   if (!token || !constantTimeEquals_(String(token), expected)) {
     throw new Error('Token admin tidak valid.');
