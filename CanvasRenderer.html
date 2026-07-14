@@ -41,9 +41,40 @@ const CanvasRenderer = (() => {
     const height = img.height * scale;
     const x = (canvas.width - width) / 2 + state.photo.x * canvas.width * 0.28;
     const y = (canvas.height - height) / 2 + state.photo.y * canvas.height * 0.28;
+    const blur = Math.max(0, Number(state.photo.blur || 0));
+    const colorFilter = `brightness(${state.photo.brightness}) contrast(${state.photo.contrast}) saturate(${state.photo.saturation}) grayscale(${state.photo.grayscale ? 1 : 0})`;
+    if (blur > 0 && needsIosBlurFallback()) {
+      drawPhotoWithDownsampleBlur(ctx, canvas, img, x, y, width, height, blur, colorFilter);
+      return;
+    }
     ctx.save();
-    ctx.filter = `brightness(${state.photo.brightness}) contrast(${state.photo.contrast}) saturate(${state.photo.saturation}) blur(${state.photo.blur}px) grayscale(${state.photo.grayscale ? 1 : 0})`;
+    ctx.filter = `${colorFilter} blur(${blur}px)`;
     ctx.drawImage(img, x, y, width, height);
+    ctx.restore();
+  }
+
+  function needsIosBlurFallback() {
+    const userAgent = navigator.userAgent || '';
+    const iosDevice = /iPhone|iPad|iPod/i.test(userAgent);
+    const ipadDesktopMode = /Macintosh/i.test(userAgent) && navigator.maxTouchPoints > 1;
+    return iosDevice || ipadDesktopMode;
+  }
+
+  function drawPhotoWithDownsampleBlur(ctx, canvas, img, x, y, width, height, blur, colorFilter) {
+    const scale = Math.max(0.18, 1 / (1 + blur * 0.24));
+    const buffer = document.createElement('canvas');
+    buffer.width = Math.max(1, Math.round(canvas.width * scale));
+    buffer.height = Math.max(1, Math.round(canvas.height * scale));
+    const bufferCtx = buffer.getContext('2d');
+    bufferCtx.imageSmoothingEnabled = true;
+    bufferCtx.imageSmoothingQuality = 'high';
+    bufferCtx.filter = colorFilter;
+    bufferCtx.drawImage(img, x * scale, y * scale, width * scale, height * scale);
+
+    ctx.save();
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(buffer, 0, 0, buffer.width, buffer.height, 0, 0, canvas.width, canvas.height);
     ctx.restore();
   }
 
