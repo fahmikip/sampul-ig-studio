@@ -11,9 +11,7 @@
   <?!= include('Styles'); ?>
 </head>
 <body>
-  <script>
-    window.__INITIAL_DATA__ = <?!= initialData ?>;
-  </script>
+  <script id="initialDataJson" type="application/json"><?!= initialData ?></script>
 
   <div class="app-shell">
     <header class="topbar">
@@ -177,4 +175,3 @@
   <?!= include('Scripts'); ?>
 </body>
 </html>
-

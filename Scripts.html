@@ -1,6 +1,6 @@
 <script>
 const App = {
-  data: window.__INITIAL_DATA__ || {},
+  data: readInitialData(),
   state: null,
   renderTimer: null
 };
@@ -8,10 +8,16 @@ const App = {
 document.addEventListener('DOMContentLoaded', initApp);
 
 function initApp() {
-  const templates = App.data.templates || [];
-  const firstTemplate = templates.find((item) => item.TemplateID === App.data.settings.DefaultTemplateID) || templates[0];
+  App.data.settings = App.data.settings || {};
+  App.data.formats = Array.isArray(App.data.formats) && App.data.formats.length ? App.data.formats : getFallbackFormats();
+  App.data.colorPresets = Array.isArray(App.data.colorPresets) && App.data.colorPresets.length ? App.data.colorPresets : getFallbackColorPresets();
+  App.data.exampleContent = Array.isArray(App.data.exampleContent) && App.data.exampleContent.length ? App.data.exampleContent : [FRONTEND_DEFAULTS.content];
+  App.data.templates = Array.isArray(App.data.templates) && App.data.templates.length ? App.data.templates : [getFallbackTemplate()];
+
+  const templates = App.data.templates;
+  const firstTemplate = templates.find((item) => item.TemplateID === App.data.settings.DefaultTemplateID) || templates[0] || getFallbackTemplate();
   App.state = {
-    format: (App.data.formats || [])[0],
+    format: App.data.formats[0],
     template: firstTemplate,
     content: Object.assign({}, FRONTEND_DEFAULTS.content, { username: App.data.settings.InstagramUsername || '@overthinkingit.id' }),
     photo: Object.assign({}, FRONTEND_DEFAULTS.photo, { image: null, dataUrl: '' }),
@@ -25,6 +31,61 @@ function initApp() {
   syncFormFromState();
   renderTemplateGrid();
   renderNow();
+}
+
+function readInitialData() {
+  const node = document.getElementById('initialDataJson');
+  if (!node) return {};
+  try {
+    return JSON.parse(node.textContent || '{}');
+  } catch (error) {
+    console.error('Initial data JSON gagal diparse.', error);
+    return {};
+  }
+}
+
+function getFallbackFormats() {
+  return [
+    { id: 'feed-portrait', name: 'Feed Portrait', width: 1080, height: 1350, ratio: '4:5' },
+    { id: 'feed-square', name: 'Feed Square', width: 1080, height: 1080, ratio: '1:1' },
+    { id: 'story', name: 'Instagram Story', width: 1080, height: 1920, ratio: '9:16' },
+    { id: 'reels-cover', name: 'Reels Cover', width: 1080, height: 1920, ratio: '9:16' }
+  ];
+}
+
+function getFallbackColorPresets() {
+  return [
+    { id: 'cinematic-black', name: 'Cinematic Black', background: '#0F0F0F', title: '#F8F8F8', description: '#CFCFCF', accent: '#E53935', overlay: '#000000', frame: '#2B2B2B' }
+  ];
+}
+
+function getFallbackTemplate() {
+  return {
+    TemplateID: 'fallback-template',
+    TemplateName: 'Default Dark',
+    Category: 'Cinematic Dark',
+    SupportedFormat: ['feed-portrait', 'feed-square', 'story', 'reels-cover'],
+    BackgroundType: 'color',
+    BackgroundValue: '#0F0F0F',
+    FontTitle: 'Oswald',
+    FontDescription: 'Inter',
+    TitleColor: '#F8F8F8',
+    DescriptionColor: '#D4D4D4',
+    AccentColor: '#E53935',
+    OverlayColor: '#000000',
+    OverlayOpacity: 0.25,
+    TitlePosition: { x: 88, y: 470, width: 904, anchor: 'left' },
+    DescriptionPosition: { x: 88, y: 735, width: 820, anchor: 'left' },
+    LabelPosition: { x: 88, y: 150, width: 560, anchor: 'left' },
+    LogoPosition: { x: 88, y: 1180, size: 54 },
+    UsernamePosition: { x: 156, y: 1214, width: 520, anchor: 'left' },
+    TitleFontSize: 96,
+    DescriptionFontSize: 34,
+    MaxTitleLines: 3,
+    TextAlignment: 'left',
+    DecorationConfig: { style: 'frame', showGrain: true, showFrame: true },
+    IsActive: true
+  };
 }
 
 function populateSelects() {
@@ -479,4 +540,3 @@ function debounce(fn, delay) {
   };
 }
 </script>
-
