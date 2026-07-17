@@ -41,6 +41,13 @@ function validateDesignMetadata(metadata) {
   if (!sanitizeInput(metadata.title)) {
     throw new Error('Judul desain wajib diisi.');
   }
+  assertTextLength_(metadata.title, 'Judul', 500);
+  assertTextLength_(metadata.description, 'Deskripsi', 5000);
+  assertTextLength_(metadata.category, 'Kategori', 200);
+  assertTextLength_(metadata.templateId, 'Template ID', 200);
+  assertTextLength_(metadata.templateName, 'Nama template', 300);
+  assertTextLength_(metadata.format, 'Format', 100);
+  validatePublicSessionId_(metadata.sessionId);
   return true;
 }
 
@@ -62,6 +69,21 @@ function validateBase64Image(base64Data, maxBytes, expectedMimeType) {
   if (maxBytes && estimatedBytes > maxBytes) {
     throw new Error('Ukuran file melebihi batas ' + Math.floor(maxBytes / 1048576) + ' MB.');
   }
+  validateImageSignature_(Utilities.base64Decode(payload), expectedMimeType);
+  return true;
+}
+
+function validateImageSignature_(bytes, mimeType) {
+  var unsigned = bytes.map(function(value) { return value < 0 ? value + 256 : value; });
+  var valid = false;
+  if (mimeType === 'image/png') {
+    valid = unsigned.length >= 8 && [137,80,78,71,13,10,26,10].every(function(value, index) { return unsigned[index] === value; });
+  } else if (mimeType === 'image/jpeg') {
+    valid = unsigned.length >= 3 && unsigned[0] === 255 && unsigned[1] === 216 && unsigned[2] === 255;
+  } else if (mimeType === 'image/webp') {
+    valid = unsigned.length >= 12 && String.fromCharCode.apply(null, unsigned.slice(0, 4)) === 'RIFF' && String.fromCharCode.apply(null, unsigned.slice(8, 12)) === 'WEBP';
+  }
+  if (!valid) throw new Error('Isi file tidak sesuai dengan tipe gambar yang dipilih.');
   return true;
 }
 

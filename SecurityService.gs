@@ -49,3 +49,29 @@ function validatePublicSessionId_(sessionId) {
   }
   return value;
 }
+
+function consumePublicSaveQuota_(sessionId) {
+  sessionId = validatePublicSessionId_(sessionId);
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var properties = PropertiesService.getScriptProperties();
+    var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+    var state = jsonParseSafe(properties.getProperty('PublicSaveQuota'), {});
+    if (state.date !== today) state = { date: today, total: 0, sessions: {} };
+    state.sessions = state.sessions || {};
+    var sessionCount = Number(state.sessions[sessionId] || 0);
+    if (Number(state.total || 0) >= APP_CONFIG.PUBLIC_SAVE_DAILY_LIMIT) {
+      throw new Error('Batas penyimpanan harian aplikasi telah tercapai. Coba lagi besok.');
+    }
+    if (sessionCount >= APP_CONFIG.PUBLIC_SAVE_SESSION_DAILY_LIMIT) {
+      throw new Error('Batas penyimpanan harian perangkat ini telah tercapai. Coba lagi besok.');
+    }
+    state.total = Number(state.total || 0) + 1;
+    state.sessions[sessionId] = sessionCount + 1;
+    properties.setProperty('PublicSaveQuota', JSON.stringify(state));
+    return true;
+  } finally {
+    lock.releaseLock();
+  }
+}

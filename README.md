@@ -120,6 +120,7 @@ Fungsi dengan akhiran `_` sengaja dibuat privat. Fungsi setup yang terlihat teta
 - Jangan menaruh token admin di HTML, source code, Spreadsheet, atau dokumentasi publik.
 - Jalankan kembali `rotateAdminAccessToken()` bila token diduga bocor. Token lama langsung tidak berlaku.
 - Deployment `Execute as: Me` menggunakan kuota Apps Script, Spreadsheet, dan Drive pemilik aplikasi untuk seluruh pengguna.
+- Penyimpanan publik dibatasi secara default hingga 10 file per sesi perangkat dan 100 file total per hari. Batas dapat disesuaikan melalui `APP_CONFIG`.
 
 ## Pengaturan Awal
 
