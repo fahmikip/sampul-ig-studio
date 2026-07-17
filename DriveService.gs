@@ -19,19 +19,22 @@ function uploadTemplateAsset(base64Data, fileName, mimeType, adminToken) {
 }
 
 function saveGeneratedImage(base64Data, fileName, mimeType, metadata) {
+  var file = null;
   try {
     validateGeneratedImage(base64Data, fileName, mimeType);
     validateDesignMetadata(metadata);
+    var sessionId = validatePublicSessionId_(metadata.sessionId);
+    consumePublicSaveQuota_(sessionId);
 
     var folder = getOrCreateMonthlyFolder_();
     var cleanName = sanitizeFileName(fileName);
     var bytes = parseBase64Data(base64Data);
     var blob = Utilities.newBlob(bytes, mimeType, cleanName);
-    var file = folder.createFile(blob);
+    file = folder.createFile(blob);
 
     var history = saveDesignHistory_({
       Title: metadata.title,
-      SessionID: validatePublicSessionId_(metadata.sessionId),
+      SessionID: sessionId,
       Description: metadata.description || '',
       Category: metadata.category || '',
       TemplateID: metadata.templateId || '',
@@ -43,6 +46,7 @@ function saveGeneratedImage(base64Data, fileName, mimeType, metadata) {
       ThumbnailURL: file.getUrl(),
       Status: 'Saved'
     });
+    if (!history.success) throw new Error(history.message || 'Riwayat desain gagal disimpan.');
 
     return createSuccessResponse({
       fileId: file.getId(),
@@ -51,6 +55,11 @@ function saveGeneratedImage(base64Data, fileName, mimeType, metadata) {
       history: history.data
     }, 'Desain berhasil disimpan ke Google Drive.');
   } catch (error) {
+    if (file) {
+      try {
+        file.setTrashed(true);
+      } catch (cleanupError) {}
+    }
     return createErrorResponse(error);
   }
 }

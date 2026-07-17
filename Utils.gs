@@ -12,6 +12,8 @@ var APP_CONFIG = {
     ACTIVE_TEMPLATES: 'ACTIVE_TEMPLATES'
   },
   MAX_UPLOAD_SIZE: 10485760,
+  PUBLIC_SAVE_DAILY_LIMIT: 100,
+  PUBLIC_SAVE_SESSION_DAILY_LIMIT: 10,
   ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/webp'],
   FORMATS: [
     { id: 'feed-portrait', name: 'Feed Portrait', width: 1080, height: 1350, ratio: '4:5' },
@@ -124,5 +126,12 @@ function serializeJsonForHtml_(value) {
 function escapeSpreadsheetFormula_(value) {
   if (typeof value !== 'string') return value;
   return /^[=+\-@]/.test(value) ? "'" + value : value;
+}
+
+function assertTextLength_(value, fieldName, maxLength) {
+  if (String(value || '').length > maxLength) {
+    throw new Error(fieldName + ' terlalu panjang. Maksimal ' + maxLength + ' karakter.');
+  }
+  return true;
 }
 

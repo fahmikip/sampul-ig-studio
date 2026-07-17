@@ -48,22 +48,46 @@ function getDesignHistory(filters) {
 }
 
 function deleteGeneratedDesign(designId, sessionId) {
+  var lock = LockService.getScriptLock();
   try {
     sessionId = validatePublicSessionId_(sessionId);
-    var history = readSheetObjects_(APP_CONFIG.SHEETS.HISTORY);
-    var item = history.filter(function(row) {
-      return row.DesignID === designId && String(row.SessionID || '') === sessionId;
-    })[0];
-    if (!item) throw new Error('Desain tidak ditemukan atau bukan milik sesi ini.');
-    if (item && item.FileID) {
-      try {
-        DriveApp.getFileById(item.FileID).setTrashed(true);
-      } catch (driveError) {}
+    lock.waitLock(30000);
+    var sheet = getSheetByName_(APP_CONFIG.SHEETS.HISTORY);
+    var values = sheet.getDataRange().getValues();
+    var headers = values[0] || [];
+    var idIndex = headers.indexOf('DesignID');
+    var sessionIndex = headers.indexOf('SessionID');
+    var fileIndex = headers.indexOf('FileID');
+    var rowIndex = -1;
+    for (var i = 1; i < values.length; i++) {
+      if (String(values[i][idIndex]) === String(designId) && String(values[i][sessionIndex] || '') === sessionId) {
+        rowIndex = i + 1;
+        break;
+      }
     }
-    var deleted = deleteSheetObject_(APP_CONFIG.SHEETS.HISTORY, 'DesignID', designId);
-    return createSuccessResponse({ deleted: deleted }, deleted ? 'Desain berhasil dihapus.' : 'Desain tidak ditemukan.');
+    if (rowIndex === -1) throw new Error('Desain tidak ditemukan atau bukan milik sesi ini.');
+    var file = null;
+    if (fileIndex !== -1 && values[rowIndex - 1][fileIndex]) {
+      try {
+        file = DriveApp.getFileById(values[rowIndex - 1][fileIndex]);
+        file.setTrashed(true);
+      } catch (driveError) {
+        throw new Error('File desain gagal dipindahkan ke Trash: ' + driveError.message);
+      }
+    }
+    try {
+      sheet.deleteRow(rowIndex);
+    } catch (sheetError) {
+      if (file) {
+        try { file.setTrashed(false); } catch (restoreError) {}
+      }
+      throw sheetError;
+    }
+    return createSuccessResponse({ deleted: true }, 'Desain berhasil dihapus.');
   } catch (error) {
     return createErrorResponse(error);
+  } finally {
+    try { lock.releaseLock(); } catch (releaseError) {}
   }
 }
 
